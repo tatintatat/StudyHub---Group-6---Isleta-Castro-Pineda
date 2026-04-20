@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyHub — Dashboard</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#e8f0f8" stroke-width="2" stroke-linecap="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <span class="topbar-name">StudyHub</span>
+    </div>
+    <div class="topbar-user">
+      {% if user.profile_picture %}
+        <img src="{{ user.profile_picture }}" class="user-avatar" alt="Profile" />
+      {% else %}
+        <div class="user-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
+      {% endif %}
+      <span class="user-display">{{ user.first_name }} {{ user.last_name }}</span>
+      <button class="logout-btn" id="logout-btn">Sign out</button>
+    </div>
+  </nav>
+
+  <main class="dash-main">
+    <h1 class="dash-greeting">Good day, <em>{{ user.first_name }}</em> 👋</h1>
+    <p class="dash-sub">Your study dashboard is ready. More features coming soon.</p>
+
+    <div class="dash-cards">
+      <div class="dash-card">
+        <div class="card-icon">📚</div>
+        <div class="card-label">Subjects</div>
+        <div class="card-val">0</div>
+      </div>
+      <div class="dash-card">
+        <div class="card-icon">🃏</div>
+        <div class="card-label">Flashcards</div>
+        <div class="card-val">0</div>
+      </div>
+      <div class="dash-card">
+        <div class="card-icon">⏱</div>
+        <div class="card-label">Study hours</div>
+        <div class="card-val">0h</div>
+      </div>
+      <div class="dash-card">
+        <div class="card-icon">🔥</div>
+        <div class="card-label">Day streak</div>
+        <div class="card-val">1</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
