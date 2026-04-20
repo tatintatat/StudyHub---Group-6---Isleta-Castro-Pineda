@@ -89,6 +89,12 @@ def index():
         return redirect(url_for("dashboard"))
     return render_template("index.html")
 
+@app.route("/login")
+def login():
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return render_template("index.html")
+
 @app.route("/signup")
 def signup():
     if "user_id" in session:
