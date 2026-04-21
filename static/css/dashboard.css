@@ -1,0 +1,102 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+  color: #1a1a2e;
+}
+
+.topbar {
+  background: #0e1a2b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 58px;
+}
+
+.topbar-brand { display: flex; align-items: center; gap: 10px; }
+
+.brand-icon-sm {
+  width: 34px; height: 34px;
+  background: #378ADD;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.brand-icon-sm svg { width: 17px; height: 17px; }
+
+.topbar-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: #e8f0f8;
+}
+
+.topbar-user { display: flex; align-items: center; gap: 12px; }
+
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+.user-initials {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #378ADD;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.user-display { font-size: 13.5px; color: #c8ddf0; }
+
+.logout-btn {
+  background: transparent;
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #7a9ab8;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.logout-btn:hover { background: rgba(255,255,255,0.08); color: #c8ddf0; }
+
+.dash-main { padding: 2.5rem 2rem; max-width: 960px; margin: 0 auto; }
+
+.dash-greeting {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+}
+
+.dash-greeting em { color: #378ADD; font-style: italic; }
+
+.dash-sub { font-size: 14px; color: #6b7280; font-weight: 300; margin-bottom: 2rem; }
+
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.dash-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-icon { font-size: 24px; }
+.card-label { font-size: 12.5px; color: #9ca3af; font-weight: 400; }
+.card-val { font-size: 26px; font-weight: 500; color: #1a1a2e; }

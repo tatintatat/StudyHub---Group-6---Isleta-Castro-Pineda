@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyHub — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --bg3:       #21262d;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #f0a500;
+      --accent2:   #58a6ff;
+      --green:     #3fb950;
+      --red:       #f85149;
+      --purple:    #bc8cff;
+      --radius:    12px;
+      --sidebar-w: 240px;
+      --right-w:   280px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 56px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      color: var(--accent);
+      text-decoration: none;
+      min-width: var(--sidebar-w);
+    }
+    .brand-icon-sm {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-icon-sm svg { width: 16px; height: 16px; }
+    .topbar-search {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+    .topbar-search input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px 8px 36px;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .topbar-search input:focus { border-color: var(--accent2); }
+    .topbar-search .search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 14px;
+    }
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .notif-btn {
+      width: 36px; height: 36px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      position: relative;
+      transition: color .2s;
+    }
+    .notif-btn:hover { color: var(--text); }
+    .notif-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px;
+      background: var(--red);
+      border-radius: 50%;
+      font-size: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600;
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 12px 4px 4px;
+      cursor: pointer;
+    }
+    .user-avatar-sm {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+    .user-initials-sm {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), #e67e00);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #000;
+    }
+    .user-chip-name { font-size: 0.82rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted);
+      padding: 4px 10px; font-size: 0.78rem;
+      cursor: pointer; transition: all .2s;
+      font-family: 'Sora', sans-serif;
+    }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      flex: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 16px;
+      gap: 20px;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      padding: 20px 0;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+    .nav-section { margin-bottom: 24px; }
+    .nav-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 12px;
+      margin-bottom: 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all .15s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active { background: rgba(240,165,0,.12); color: var(--accent); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .user-profile-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .profile-avatar-lg {
+      width: 56px; height: 56px;
+      border-radius: 12px;
+      margin: 0 auto 8px;
+      object-fit: cover;
+    }
+    .profile-initials-lg {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent), #e67e00);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #000;
+      margin: 0 auto 8px;
+    }
+    .profile-name { font-size: 0.9rem; font-weight: 600; }
+    .profile-username { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+    .profile-stats {
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
+    .stat-lbl { font-size: 0.65rem; color: var(--muted); }
+
+    /* ── MAIN FEED ── */
+    .feed {
+      flex: 1;
+      padding: 20px 0;
+      min-width: 0;
+    }
+
+    /* Post composer */
+    .composer {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .composer-header {
+      display: flex; gap: 12px; align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .composer textarea {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: 'Sora', sans-serif;
+      resize: none;
+      height: 80px;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    .composer textarea:focus { border-color: var(--accent2); }
+    .composer-title {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+      width: 100%;
+      margin-bottom: 8px;
+      transition: border-color .2s;
+    }
+    .composer-title:focus { border-color: var(--accent2); }
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tag-select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+      cursor: pointer;
+    }
+    .post-btn {
+      margin-left: auto;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      transition: opacity .2s;
+    }
+    .post-btn:hover { opacity: .85; }
+
+    /* Feed filters */
+    .feed-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Sora', sans-serif;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(240,165,0,.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Post card */
+    .post-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      transition: border-color .2s;
+    }
+    .post-card:hover { border-color: #444c56; }
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .post-avatar {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent2), #0066cc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-meta { flex: 1; }
+    .post-author { font-size: 0.88rem; font-weight: 600; }
+    .post-time { font-size: 0.73rem; color: var(--muted); }
+    .post-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .tag-math    { background: rgba(88,166,255,.15); color: var(--accent2); }
+    .tag-science { background: rgba(63,185,80,.15);  color: var(--green); }
+    .tag-general { background: rgba(240,165,0,.15);  color: var(--accent); }
+    .tag-help    { background: rgba(248,81,73,.15);  color: var(--red); }
+    .tag-notes   { background: rgba(188,140,255,.15);color: var(--purple); }
+    .post-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-family: 'DM Serif Display', serif;
+    }
+    .post-content {
+      font-size: 0.85rem;
+      color: #cdd9e5;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .post-actions {
+      display: flex;
+      gap: 4px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      transition: all .15s;
+    }
+    .action-btn:hover { background: var(--bg3); color: var(--text); }
+    .action-btn.liked { color: var(--red); }
+    .action-btn.liked:hover { color: var(--red); }
+
+    /* Comments */
+    .comments-section {
+      display: none;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .comments-section.open { display: block; }
+    .comment {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .comment-avatar {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--purple), #8855cc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .comment-body {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      flex: 1;
+    }
+    .comment-author { font-size: 0.78rem; font-weight: 600; margin-bottom: 2px; }
+    .comment-text { font-size: 0.82rem; color: #cdd9e5; }
+    .comment-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .comment-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+    }
+    .comment-input:focus { border-color: var(--accent2); }
+    .comment-send {
+      background: var(--accent2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 0 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* ── RIGHT SIDEBAR ── */
+    .right-sidebar {
+      width: var(--right-w);
+      flex-shrink: 0;
+      padding: 20px 0;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .widget {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .widget-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Leaderboard */
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-item:last-child { border-bottom: none; }
+    .rank {
+      width: 22px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .rank.gold   { color: #ffd700; }
+    .rank.silver { color: #c0c0c0; }
+    .rank.bronze { color: #cd7f32; }
+    .lb-avatar {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--accent), #e67e00);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #000;
+    }
+    .lb-info { flex: 1; }
+    .lb-name { font-size: 0.82rem; font-weight: 600; }
+    .lb-score { font-size: 0.72rem; color: var(--muted); }
+    .lb-pts { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
+
+    /* Active users */
+    .active-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+    }
+    .active-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+    .active-name { font-size: 0.83rem; flex: 1; }
+    .msg-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      transition: all .15s;
+    }
+    .msg-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .modal-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .modal-body { padding: 16px 20px; flex: 1; overflow-y: auto; }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+    .modal-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: 'Sora', sans-serif;
+      outline: none;
+    }
+    .modal-input:focus { border-color: var(--accent2); }
+    .modal-send {
+      background: var(--accent2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: 'Sora', sans-serif;
+    }
+
+    /* Messages */
+    .message-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .message-bubble.sent {
+      background: var(--accent2);
+      color: #fff;
+      margin-left: auto;
+      border-bottom-right-radius: 3px;
+    }
+    .message-bubble.recv {
+      background: var(--bg3);
+      border-bottom-left-radius: 3px;
+    }
+    .message-time {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .msg-row { display: flex; flex-direction: column; margin-bottom: 4px; }
+    .msg-row.sent { align-items: flex-end; }
+    .msg-row.recv { align-items: flex-start; }
+
+    /* Profile modal */
+    .profile-modal-avatar {
+      width: 72px; height: 72px;
+      border-radius: 14px;
+      margin: 0 auto 12px;
+      background: linear-gradient(135deg, var(--accent), #e67e00);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; color: #000;
+    }
+    .profile-modal-name {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'DM Serif Display', serif;
+      margin-bottom: 4px;
+    }
+    .profile-modal-uname {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .profile-modal-stats {
+      display: flex;
+      justify-content: space-around;
+      background: var(--bg3);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error   { border-color: var(--red);   color: var(--red); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <nav class="topbar">
+    <a class="topbar-brand" href="#">
+      <div class="brand-icon-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      StudyHub
+    </a>
+
+    <div class="topbar-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search posts, users…" id="search-input" />
+    </div>
+
+    <div class="topbar-right">
+      <div class="notif-btn" onclick="showToast('No new notifications', 'success')">
+        🔔
+        <span class="notif-badge">3</span>
+      </div>
+      <div class="user-chip" onclick="openProfile()">
+        <div class="user-initials-sm" id="topbar-initials">?</div>
+        <span class="user-chip-name" id="topbar-name">Loading…</span>
+      </div>
+      <button class="logout-btn" id="logout-btn">Sign out</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <!-- Profile Card -->
+      <div class="user-profile-card">
+        <div class="profile-initials-lg" id="sidebar-initials">?</div>
+        <div class="profile-name" id="sidebar-name">Loading…</div>
+        <div class="profile-username" id="sidebar-username">@user</div>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <div class="stat-val" id="stat-posts">0</div>
+            <div class="stat-lbl">Posts</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="stat-likes">0</div>
+            <div class="stat-lbl">Likes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="stat-rank">#–</div>
+            <div class="stat-lbl">Rank</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Menu</div>
+        <a class="nav-item active" onclick="setView('feed')"><span class="icon">🏠</span> News Feed</a>
+        <a class="nav-item" onclick="openProfile()"><span class="icon">👤</span> My Profile</a>
+        <a class="nav-item" onclick="openMessages()"><span class="icon">📩</span> Messages <span class="nav-badge" id="msg-badge" style="display:none">!</span></a>
+        <a class="nav-item" onclick="setView('leaderboard')"><span class="icon">🏆</span> Leaderboard</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Topics</div>
+        <a class="nav-item" onclick="filterByTag('Math')"><span class="icon">📐</span> Math</a>
+        <a class="nav-item" onclick="filterByTag('Science')"><span class="icon">🔬</span> Science</a>
+        <a class="nav-item" onclick="filterByTag('Notes')"><span class="icon">📝</span> Notes</a>
+        <a class="nav-item" onclick="filterByTag('Help')"><span class="icon">🆘</span> Help Needed</a>
+      </div>
+    </aside>
+
+    <!-- MAIN FEED -->
+    <main class="feed" id="main-feed">
+
+      <!-- Composer -->
+      <div class="composer">
+        <input class="composer-title" id="post-title" placeholder="Post title (e.g. Help with Algebra)" />
+        <textarea id="post-content" placeholder="Share a question, note, or idea with your classmates…"></textarea>
+        <div class="composer-footer">
+          <select class="tag-select" id="post-tag">
+            <option value="General">💬 General</option>
+            <option value="Math">📐 Math</option>
+            <option value="Science">🔬 Science</option>
+            <option value="Notes">📝 Notes</option>
+            <option value="Help">🆘 Help Needed</option>
+          </select>
+          <button class="post-btn" onclick="submitPost()">Post</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="feed-filters">
+        <button class="filter-btn active" onclick="filterFeed('all', this)">All Posts</button>
+        <button class="filter-btn" onclick="filterFeed('mine', this)">My Posts</button>
+        <button class="filter-btn" onclick="filterFeed('liked', this)">Liked</button>
+      </div>
+
+      <!-- Posts Container -->
+      <div id="posts-container"></div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="right-sidebar">
+
+      <!-- Leaderboard widget -->
+      <div class="widget">
+        <div class="widget-title">🏆 Top Students</div>
+        <div id="leaderboard-widget"></div>
+      </div>
+
+      <!-- Online users -->
+      <div class="widget">
+        <div class="widget-title">🟢 Online Now</div>
+        <div id="online-users"></div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- MESSAGE MODAL -->
+  <div class="modal-overlay" id="msg-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>💬 Messages</span>
+        <button class="modal-close" onclick="closeModal('msg-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="msg-body" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <div class="modal-footer">
+        <input class="modal-input" id="msg-input" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMessage()" />
+        <button class="modal-send" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>👤 Profile</span>
+        <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="profile-modal-avatar" id="pm-initials">?</div>
+        <div class="profile-modal-name" id="pm-name">—</div>
+        <div class="profile-modal-uname" id="pm-uname">@—</div>
+        <div class="profile-modal-stats">
+          <div class="stat-item">
+            <div class="stat-val" id="pm-posts">0</div>
+            <div class="stat-lbl">Posts</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="pm-likes">0</div>
+            <div class="stat-lbl">Likes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="pm-rank">#–</div>
+            <div class="stat-lbl">Rank</div>
+          </div>
+        </div>
+        <div id="pm-badge-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let currentUser = { id: null, first_name: 'User', last_name: '', username: 'user', email: '' };
+let posts       = [];
+let messages    = [];
+let filterMode  = 'all';
+let tagFilter   = null;
+let msgTarget   = 'Classmate';
+
+// ── Sample seed data ───────────────────────────────────────────────────────
+const SEED_POSTS = [
+  { id: 1, author: 'Maria Santos', username: 'maria_s', initials: 'MS', tag: 'Math',
+    title: 'Help with Quadratic Equations', liked: false, likes: 12, comments: 3,
+    content: 'I\'m having trouble solving x² + 5x + 6 = 0. Can anyone walk me through the steps?',
+    time: '2h ago', commentsList: [
+      { author: 'Juan Cruz', initials: 'JC', text: 'Use the quadratic formula: x = (-b ± √(b²-4ac)) / 2a' },
+      { author: 'Ana Reyes', initials: 'AR', text: 'You can also factor it: (x+2)(x+3) = 0, so x = -2 or x = -3!' }
+    ]},
+  { id: 2, author: 'Carlo Mendez', username: 'carlo_m', initials: 'CM', tag: 'Science',
+    title: 'Notes: Photosynthesis Summary', liked: false, likes: 8, comments: 1,
+    content: '6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂. Happens in the chloroplast. Light reactions in thylakoid, Calvin cycle in stroma.',
+    time: '4h ago', commentsList: [
+      { author: 'Liza Tan', initials: 'LT', text: 'Thanks for sharing! This is really helpful for our upcoming exam 🙏' }
+    ]},
+  { id: 3, author: 'Liza Tan', username: 'liza_t', initials: 'LT', tag: 'Help',
+    title: 'Anyone understand Rizal\'s Noli Me Tangere Chapter 5?', liked: false, likes: 5, comments: 0,
+    content: 'I\'m lost on the significance of the cena chapter. What does it represent in the context of Philippine society?',
+    time: '6h ago', commentsList: []},
+];
+
+const LEADERBOARD = [
+  { name: 'Maria Santos', initials: 'MS', pts: 245, posts: 18, likes: 89 },
+  { name: 'Carlo Mendez', initials: 'CM', pts: 198, posts: 14, likes: 72 },
+  { name: 'Liza Tan',     initials: 'LT', pts: 167, posts: 11, likes: 55 },
+  { name: 'Juan Cruz',    initials: 'JC', pts: 134, posts: 9,  likes: 43 },
+  { name: 'Ana Reyes',    initials: 'AR', pts: 98,  posts: 6,  likes: 31 },
+];
+
+const ONLINE_USERS = ['Maria Santos', 'Carlo Mendez', 'Juan Cruz'];
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchUser();
+  posts = JSON.parse(localStorage.getItem('sh_posts') || 'null') || SEED_POSTS;
+  messages = JSON.parse(localStorage.getItem('sh_messages') || '[]');
+  renderFeed();
+  renderLeaderboard();
+  renderOnlineUsers();
+  updateStats();
+});
+
+async function fetchUser() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.ok) {
+      currentUser = await res.json();
+    }
+  } catch(e) {}
+  const initials = (currentUser.first_name[0] || '?') + (currentUser.last_name?.[0] || '');
+  const name     = currentUser.first_name + ' ' + (currentUser.last_name || '');
+  document.getElementById('topbar-initials').textContent = initials;
+  document.getElementById('topbar-name').textContent     = currentUser.first_name;
+  document.getElementById('sidebar-initials').textContent = initials;
+  document.getElementById('sidebar-name').textContent    = name;
+  document.getElementById('sidebar-username').textContent = '@' + (currentUser.username || 'user');
+}
+
+// ── Post functions ──────────────────────────────────────────────────────────
+function submitPost() {
+  const title   = document.getElementById('post-title').value.trim();
+  const content = document.getElementById('post-content').value.trim();
+  const tag     = document.getElementById('post-tag').value;
+
+  if (!title || !content) { showToast('Please fill in title and content!', 'error'); return; }
+
+  const post = {
+    id: Date.now(),
+    author: currentUser.first_name + ' ' + (currentUser.last_name || ''),
+    username: currentUser.username || 'user',
+    initials: (currentUser.first_name[0] || '?') + (currentUser.last_name?.[0] || ''),
+    tag, title, content,
+    liked: false, likes: 0, comments: 0,
+    time: 'just now',
+    commentsList: [],
+    mine: true,
+  };
+
+  posts.unshift(post);
+  savePosts();
+  renderFeed();
+  updateStats();
+  showToast('Post created! 🎉', 'success');
+
+  document.getElementById('post-title').value   = '';
+  document.getElementById('post-content').value = '';
+}
+
+function renderFeed() {
+  let filtered = [...posts];
+
+  if (filterMode === 'mine') {
+    filtered = filtered.filter(p => p.mine || p.username === (currentUser.username || 'user'));
+  } else if (filterMode === 'liked') {
+    filtered = filtered.filter(p => p.liked);
+  }
+
+  if (tagFilter) {
+    filtered = filtered.filter(p => p.tag === tagFilter);
+  }
+
+  const container = document.getElementById('posts-container');
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No posts here yet. Be the first to post!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(post => `
+    <div class="post-card" id="post-${post.id}">
+      <div class="post-header">
+        <div class="post-avatar">${post.initials}</div>
+        <div class="post-meta">
+          <div class="post-author">${post.author}</div>
+          <div class="post-time">@${post.username} · ${post.time}</div>
+        </div>
+        <span class="post-tag tag-${post.tag.toLowerCase()}">${post.tag}</span>
+      </div>
+      <div class="post-title">${post.title}</div>
+      <div class="post-content">${post.content}</div>
+      <div class="post-actions">
+        <button class="action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+          ${post.liked ? '❤️' : '🤍'} ${post.likes}
+        </button>
+        <button class="action-btn" onclick="toggleComments(${post.id})">
+          💬 ${post.commentsList.length}
+        </button>
+        <button class="action-btn" onclick="openMsgModal('${post.author}')">
+          📩 Message
+        </button>
+        ${post.mine || post.username === (currentUser.username||'user') ? `
+          <button class="action-btn" style="margin-left:auto;color:var(--red)" onclick="deletePost(${post.id})">🗑️</button>
+        ` : ''}
+      </div>
+      <div class="comments-section" id="comments-${post.id}">
+        ${post.commentsList.map(c => `
+          <div class="comment">
+            <div class="comment-avatar">${c.initials || c.author[0]}</div>
+            <div class="comment-body">
+              <div class="comment-author">${c.author}</div>
+              <div class="comment-text">${c.text}</div>
+            </div>
+          </div>
+        `).join('')}
+        <div class="comment-input-row">
+          <input class="comment-input" id="cinput-${post.id}" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')addComment(${post.id})"/>
+          <button class="comment-send" onclick="addComment(${post.id})">↑</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleLike(id) {
+  const post = posts.find(p => p.id === id);
+  if (!post) return;
+  post.liked  = !post.liked;
+  post.likes += post.liked ? 1 : -1;
+  savePosts();
+  renderFeed();
+  updateStats();
+}
+
+function toggleComments(id) {
+  const el = document.getElementById(`comments-${id}`);
+  el.classList.toggle('open');
+}
+
+function addComment(id) {
+  const input = document.getElementById(`cinput-${id}`);
+  const text  = input.value.trim();
+  if (!text) return;
+  const post = posts.find(p => p.id === id);
+  post.commentsList.push({
+    author:   currentUser.first_name + ' ' + (currentUser.last_name || ''),
+    initials: (currentUser.first_name[0] || '?') + (currentUser.last_name?.[0] || ''),
+    text,
+  });
+  post.comments = post.commentsList.length;
+  savePosts();
+  renderFeed();
+  document.getElementById(`comments-${id}`)?.classList.add('open');
+  showToast('Comment added!', 'success');
+}
+
+function deletePost(id) {
+  posts = posts.filter(p => p.id !== id);
+  savePosts();
+  renderFeed();
+  updateStats();
+  showToast('Post deleted.', 'success');
+}
+
+function filterFeed(mode, btn) {
+  filterMode = mode;
+  tagFilter  = null;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function filterByTag(tag) {
+  tagFilter  = tag;
+  filterMode = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  renderFeed();
+}
+
+function savePosts() {
+  localStorage.setItem('sh_posts', JSON.stringify(posts));
+}
+
+// ── Stats ───────────────────────────────────────────────────────────────────
+function updateStats() {
+  const myPosts = posts.filter(p => p.mine || p.username === (currentUser.username||'user'));
+  const myLikes = myPosts.reduce((s, p) => s + p.likes, 0);
+  document.getElementById('stat-posts').textContent = myPosts.length;
+  document.getElementById('stat-likes').textContent = myLikes;
+  const rank = myPosts.length >= 10 ? '#1' : myPosts.length >= 5 ? '#3' : '#–';
+  document.getElementById('stat-rank').textContent  = rank;
+}
+
+// ── Leaderboard ─────────────────────────────────────────────────────────────
+function renderLeaderboard() {
+  const ranks = ['gold', 'silver', 'bronze'];
+  document.getElementById('leaderboard-widget').innerHTML = LEADERBOARD.map((u, i) => `
+    <div class="leaderboard-item">
+      <div class="rank ${ranks[i] || ''}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+      <div class="lb-avatar">${u.initials}</div>
+      <div class="lb-info">
+        <div class="lb-name">${u.name}</div>
+        <div class="lb-score">${u.posts} posts · ${u.likes} likes</div>
+      </div>
+      <div class="lb-pts">${u.pts}</div>
+    </div>
+  `).join('');
+}
+
+// ── Online Users ─────────────────────────────────────────────────────────────
+function renderOnlineUsers() {
+  document.getElementById('online-users').innerHTML = ONLINE_USERS.map(name => `
+    <div class="active-user">
+      <div class="active-dot"></div>
+      <span class="active-name">${name}</span>
+      <button class="msg-btn" onclick="openMsgModal('${name}')">💬</button>
+    </div>
+  `).join('');
+}
+
+// ── Messaging ────────────────────────────────────────────────────────────────
+function openMessages() {
+  openMsgModal('Classmate');
+}
+
+function openMsgModal(target) {
+  msgTarget = target;
+  document.querySelector('#msg-modal .modal-header span').textContent = `💬 Chat with ${target}`;
+  const body = document.getElementById('msg-body');
+  const chat = messages.filter(m => m.target === target || m.from === target);
+
+  if (!chat.length) {
+    body.innerHTML = `<div class="empty-state"><div class="emoji">💬</div><p>No messages yet. Say hello!</p></div>`;
+  } else {
+    body.innerHTML = chat.map(m => `
+      <div class="msg-row ${m.sent ? 'sent' : 'recv'}">
+        <div class="message-bubble ${m.sent ? 'sent' : 'recv'}">${m.text}</div>
+        <div class="message-time">${m.time}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('msg-modal').classList.add('open');
+  body.scrollTop = body.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const msg = { target: msgTarget, from: currentUser.first_name, text, sent: true, time: 'just now' };
+  messages.push(msg);
+  localStorage.setItem('sh_messages', JSON.stringify(messages));
+  input.value = '';
+  openMsgModal(msgTarget);
+  showToast('Message sent! ✉️', 'success');
+}
+
+// ── Profile ──────────────────────────────────────────────────────────────────
+function openProfile() {
+  const initials = (currentUser.first_name[0] || '?') + (currentUser.last_name?.[0] || '');
+  const name     = currentUser.first_name + ' ' + (currentUser.last_name || '');
+  const myPosts  = posts.filter(p => p.mine || p.username === (currentUser.username||'user'));
+  const myLikes  = myPosts.reduce((s, p) => s + p.likes, 0);
+
+  document.getElementById('pm-initials').textContent = initials;
+  document.getElementById('pm-name').textContent     = name;
+  document.getElementById('pm-uname').textContent    = '@' + (currentUser.username || 'user');
+  document.getElementById('pm-posts').textContent    = myPosts.length;
+  document.getElementById('pm-likes').textContent    = myLikes;
+  document.getElementById('pm-rank').textContent     = myPosts.length >= 5 ? '#Top' : '#–';
+
+  const badges = [];
+  if (myPosts.length >= 1)  badges.push('📝 First Post');
+  if (myPosts.length >= 5)  badges.push('🔥 Active Contributor');
+  if (myLikes >= 10)        badges.push('❤️ Well Liked');
+
+  document.getElementById('pm-badge-area').innerHTML = badges.length
+    ? `<div style="display:flex;gap:8px;flex-wrap:wrap;">${badges.map(b => `<span style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:0.75rem;">${b}</span>`).join('')}</div>`
+    : '';
+
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+// ── Search ───────────────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  if (!q) { renderFeed(); return; }
+  const filtered = posts.filter(p =>
+    p.title.toLowerCase().includes(q) ||
+    p.content.toLowerCase().includes(q) ||
+    p.author.toLowerCase().includes(q)
+  );
+  const container = document.getElementById('posts-container');
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>No results for "${q}"</p></div>`;
+    return;
+  }
+  // Re-render with filtered
+  const tmp = posts;
+  posts = filtered;
+  renderFeed();
+  posts = tmp;
+});
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function setView(view) {
+  // Future: switch between feed and leaderboard full-page views
+  showToast('Coming soon!', 'success');
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+  } catch(e) {}
+  window.location.href = '/';
+});
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
