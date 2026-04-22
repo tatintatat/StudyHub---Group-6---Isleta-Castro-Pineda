@@ -5,63 +5,653 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>StudyHub — Dashboard</title>
   <link rel="stylesheet" href="/static/css/dashboard.css" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
-  <nav class="topbar">
-    <div class="topbar-brand">
-      <div class="brand-icon-sm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#e8f0f8" stroke-width="2" stroke-linecap="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<nav class="sidebar" id="sidebar">
+
+  <div class="sidebar-brand">
+    <div class="brand-icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#e8f0f8" stroke-width="2" stroke-linecap="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    </div>
+    <span class="brand-label">StudyHub</span>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+
+    <a href="#" class="nav-item active" data-view="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      Dashboard
+    </a>
+
+    <a href="#" class="nav-item" data-view="reports">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Reports
+    </a>
+
+    <a href="#" class="nav-item" data-view="statistics">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Statistics
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Study</div>
+
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Subjects
+      <span class="nav-badge">0</span>
+    </a>
+
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M12 4v16"/>
+      </svg>
+      Flashcards
+    </a>
+
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Focus Timer
+    </a>
+
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Study Groups
+    </a>
+  </div>
+
+  <div class="sidebar-bottom">
+    {% if user.profile_picture %}
+      <div class="user-row">
+        <img src="{{ user.profile_picture }}" class="user-ava" alt="Avatar" />
+        <div class="user-info">
+          <div class="user-name-sm">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="user-role">Student</div>
+        </div>
+        <i class="fa-solid fa-arrow-right-from-bracket logout-icon" id="logout-btn" title="Sign out"></i>
+      </div>
+    {% else %}
+      <div class="user-row">
+        <div class="user-ava-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
+        <div class="user-info">
+          <div class="user-name-sm">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="user-role">Student</div>
+        </div>
+        <i class="fa-solid fa-arrow-right-from-bracket logout-icon" id="logout-btn" title="Sign out"></i>
+      </div>
+    {% endif %}
+  </div>
+
+</nav>
+
+<!-- ══════════════════════ MAIN ══════════════════════════ -->
+<div class="main-wrap">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-subtitle" id="page-subtitle">Overview of your study activity</div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-      </div>
-      <span class="topbar-name">StudyHub</span>
+        Search
+      </button>
+      <button class="topbar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
     </div>
-    <div class="topbar-user">
-      {% if user.profile_picture %}
-        <img src="{{ user.profile_picture }}" class="user-avatar" alt="Profile" />
-      {% else %}
-        <div class="user-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
-      {% endif %}
-      <span class="user-display">{{ user.first_name }} {{ user.last_name }}</span>
-      <button class="logout-btn" id="logout-btn">Sign out</button>
-    </div>
-  </nav>
+  </header>
 
-  <main class="dash-main">
-    <h1 class="dash-greeting">Good day, <em>{{ user.first_name }}</em> 👋</h1>
-    <p class="dash-sub">Your study dashboard is ready. More features coming soon.</p>
+  <!-- ══════ VIEW: DASHBOARD ══════ -->
+  <div class="page-body" id="view-dashboard">
 
-    <div class="dash-cards">
-      <div class="dash-card">
-        <div class="card-icon">📚</div>
-        <div class="card-label">Subjects</div>
-        <div class="card-val">0</div>
+    <div class="welcome-row">
+      <div class="welcome-text">
+        <h1>Good day, <em>{{ user.first_name }}</em></h1>
+        <p>Here's what's happening with your studies today.</p>
       </div>
-      <div class="dash-card">
-        <div class="card-icon">🃏</div>
-        <div class="card-label">Flashcards</div>
-        <div class="card-val">0</div>
-      </div>
-      <div class="dash-card">
-        <div class="card-icon">⏱</div>
-        <div class="card-label">Study hours</div>
-        <div class="card-val">0h</div>
-      </div>
-      <div class="dash-card">
-        <div class="card-icon">🔥</div>
-        <div class="card-label">Day streak</div>
-        <div class="card-val">1</div>
+      <div class="date-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span id="today-date">—</span>
       </div>
     </div>
-  </main>
 
-  <script>
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/';
+    <!-- Stats row -->
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-delta delta-zero">New</div>
+        <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Subjects</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-delta delta-zero">New</div>
+        <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Flashcards</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-delta delta-zero">New</div>
+        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+        <div class="stat-val">0h</div>
+        <div class="stat-label">Study hours</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-delta delta-up">Active</div>
+        <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+        <div class="stat-val">1</div>
+        <div class="stat-label">Day streak</div>
+      </div>
+    </div>
+
+    <!-- Row 2: Activity + Weekly Goal -->
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Weekly Activity</div>
+            <div class="card-subtitle">Study minutes per day</div>
+          </div>
+          <a class="card-action" href="#">This week</a>
+        </div>
+        <div class="activity-chart" id="activity-chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Weekly Goal</div>
+            <div class="card-subtitle">10 hours target</div>
+          </div>
+        </div>
+        <div class="goal-ring-wrap">
+          <div class="goal-ring" id="goal-ring-wrap">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#3b9eff"/>
+                  <stop offset="100%" stop-color="#818cf8"/>
+                </linearGradient>
+              </defs>
+              <circle class="goal-ring-bg"   cx="50" cy="50" r="45"/>
+              <circle class="goal-ring-fill" cx="50" cy="50" r="45" id="ring-fill"/>
+            </svg>
+            <div class="goal-ring-label">
+              <div class="goal-pct" id="goal-pct">0%</div>
+              <div class="goal-unit">done</div>
+            </div>
+          </div>
+          <div class="goal-info">
+            <div class="goal-title">0 / 10 hrs studied</div>
+            <div class="goal-bar-wrap">
+              <div class="goal-bar-fill" id="goal-bar" style="width:0%"></div>
+            </div>
+            <div class="goal-sub">Keep going — you can do this!</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 3: Subjects + Activity feed + Streak -->
+    <div class="three-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">My Subjects</div>
+            <div class="card-subtitle">Active courses</div>
+          </div>
+          <a class="card-action" href="#">+ Add</a>
+        </div>
+        <div class="subject-list" id="subject-list">
+          <div class="empty-state">
+            <i class="fa-solid fa-book-open empty-icon-fa"></i>
+            <div>No subjects yet</div>
+            <div class="empty-sub">Add your first subject to get started</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recent Activity</div>
+            <div class="card-subtitle">What you've been up to</div>
+          </div>
+        </div>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item">
+            <div class="act-dot-icon" style="background:rgba(59,158,255,0.1)">
+              <i class="fa-solid fa-party-horn" style="color:#3b9eff;font-size:13px;"></i>
+            </div>
+            <div class="act-text">
+              <div class="act-title">Account created</div>
+              <div class="act-time">Just now — Welcome to StudyHub!</div>
+            </div>
+          </div>
+          <div class="empty-state" style="padding:1rem 0 0">
+            <div class="empty-sub">Your study sessions will appear here</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Streak</div>
+            <div class="card-subtitle">Consecutive study days</div>
+          </div>
+        </div>
+        <div class="streak-wrap">
+          <div class="streak-num">1</div>
+          <div class="streak-label">
+            <i class="fa-solid fa-fire" style="color:#fbbf24;margin-right:4px;"></i>day streak
+          </div>
+          <div class="streak-days" id="streak-days"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 4: Quick actions + Account info -->
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Quick Actions</div>
+        </div>
+        <div class="quick-actions">
+          <button class="qa-btn">
+            <div class="qa-icon" style="background:rgba(59,158,255,0.1)">
+              <i class="fa-solid fa-play" style="color:#3b9eff;font-size:13px;"></i>
+            </div>
+            Start Session
+          </button>
+          <button class="qa-btn">
+            <div class="qa-icon" style="background:rgba(129,140,248,0.1)">
+              <i class="fa-solid fa-layer-group" style="color:#818cf8;font-size:13px;"></i>
+            </div>
+            New Flashcard
+          </button>
+          <button class="qa-btn">
+            <div class="qa-icon" style="background:rgba(52,211,153,0.1)">
+              <i class="fa-solid fa-pen-to-square" style="color:#34d399;font-size:13px;"></i>
+            </div>
+            Take Notes
+          </button>
+          <button class="qa-btn">
+            <div class="qa-icon" style="background:rgba(251,191,36,0.1)">
+              <i class="fa-solid fa-stopwatch" style="color:#fbbf24;font-size:13px;"></i>
+            </div>
+            Pomodoro Timer
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Account Overview</div>
+        </div>
+        <div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Username</span>
+            <span class="mini-stat-val">{{ user.username }}</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Email</span>
+            <span class="mini-stat-val" style="font-size:12px;font-family:'Inter',sans-serif;font-weight:400">{{ user.email }}</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Member since</span>
+            <span class="mini-stat-val" style="font-size:12px;font-family:'Inter',sans-serif;font-weight:400" id="member-since">—</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Auth method</span>
+            <span class="mini-stat-val" style="font-size:12px">{{ user.auth_provider | upper }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /view-dashboard -->
+
+
+  <!-- ══════ VIEW: REPORTS ══════ -->
+  <div class="page-body" id="view-reports" style="display:none;">
+
+    <div class="welcome-row">
+      <div class="welcome-text">
+        <h1>Study <em>Reports</em></h1>
+        <p>Detailed breakdown of your learning performance.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Sessions this month</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="stat-val">0h</div>
+        <div class="stat-label">Total study time</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-val">0%</div>
+        <div class="stat-label">Goal completion</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+        <div class="stat-val">—</div>
+        <div class="stat-label">Best day</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Monthly Overview</div>
+            <div class="card-subtitle">Study hours per week</div>
+          </div>
+        </div>
+        <div class="activity-chart" style="height:120px;" id="report-monthly-chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Subject Breakdown</div>
+            <div class="card-subtitle">Time per subject</div>
+          </div>
+        </div>
+        <div class="empty-state" style="padding:1.5rem 0">
+          <i class="fa-solid fa-chart-pie empty-icon-fa"></i>
+          <div>No data yet</div>
+          <div class="empty-sub">Add subjects and start studying to see your breakdown</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.75rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Study Log</div>
+          <div class="card-subtitle">All your sessions in one place</div>
+        </div>
+      </div>
+      <div class="empty-state" style="padding:2rem 0">
+        <i class="fa-solid fa-clipboard-list empty-icon-fa"></i>
+        <div>No sessions recorded yet</div>
+        <div class="empty-sub">Your study sessions will be logged here automatically</div>
+      </div>
+    </div>
+
+  </div><!-- /view-reports -->
+
+
+  <!-- ══════ VIEW: STATISTICS ══════ -->
+  <div class="page-body" id="view-statistics" style="display:none;">
+
+    <div class="welcome-row">
+      <div class="welcome-text">
+        <h1>Your <em>Statistics</em></h1>
+        <p>Deep dive into your learning patterns and performance.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card c-blue">
+        <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Cards reviewed</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon"><i class="fa-solid fa-lightbulb"></i></div>
+        <div class="stat-val">0%</div>
+        <div class="stat-label">Accuracy rate</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Quizzes taken</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
+        <div class="stat-val">0</div>
+        <div class="stat-label">Achievements</div>
+      </div>
+    </div>
+
+    <div class="three-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Streak History</div>
+            <div class="card-subtitle">Last 30 days</div>
+          </div>
+        </div>
+        <div id="heatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:0.5rem;"></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:11px;color:var(--text-dim);">
+          <span>Less</span>
+          <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-card-2);border:1px solid var(--border)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.2)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.5)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.85)"></div>
+          <span>More</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Peak Study Hours</div>
+            <div class="card-subtitle">When you study most</div>
+          </div>
+        </div>
+        <div class="activity-chart" style="height:110px;" id="peak-hours-chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Performance</div>
+            <div class="card-subtitle">Key learning metrics</div>
+          </div>
+        </div>
+        <div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Avg. session length</span>
+            <span class="mini-stat-val">— min</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Total sessions</span>
+            <span class="mini-stat-val">0</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Longest streak</span>
+            <span class="mini-stat-val">1 day</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Retention rate</span>
+            <span class="mini-stat-val">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /view-statistics -->
+
+</div><!-- /main-wrap -->
+
+
+<script>
+/* ── Navigation ─────────────────────────────── */
+const views = {
+  dashboard:  { el: 'view-dashboard',  title: 'Dashboard',   sub: 'Overview of your study activity' },
+  reports:    { el: 'view-reports',    title: 'Reports',      sub: 'Detailed performance breakdown' },
+  statistics: { el: 'view-statistics', title: 'Statistics',   sub: 'Deep dive into your learning patterns' },
+};
+
+document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    const key = item.dataset.view;
+    if (!views[key]) return;
+    Object.values(views).forEach(v => {
+      const el = document.getElementById(v.el);
+      if (el) el.style.display = 'none';
     });
-  </script>
+    const target = document.getElementById(views[key].el);
+    if (target) { target.style.display = 'block'; target.style.animation = 'fadeUp 0.35s ease both'; }
+    document.getElementById('page-title').textContent    = views[key].title;
+    document.getElementById('page-subtitle').textContent = views[key].sub;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+/* ── Logout ─────────────────────────────────── */
+document.getElementById('logout-btn').addEventListener('click', async function() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/';
+});
+
+/* ── Today's date ────────────────────────────── */
+const dateEl = document.getElementById('today-date');
+if (dateEl) {
+  dateEl.textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric'
+  });
+}
+
+/* ── Member since ────────────────────────────── */
+fetch('/api/stats').then(r => r.json()).then(function(data) {
+  const ms = document.getElementById('member-since');
+  if (ms && data.member_since) {
+    ms.textContent = new Date(data.member_since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}).catch(() => {});
+
+/* ── Weekly activity chart ───────────────────── */
+(function buildActivityChart() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const chart = document.getElementById('activity-chart');
+  if (!chart) return;
+  chart.innerHTML = days.map((d, i) => `
+    <div class="act-col">
+      <div class="act-bar-wrap">
+        <div class="act-bar empty" style="height:4%"></div>
+      </div>
+      <div class="act-day ${i === todayIdx ? 'today' : ''}">${d}</div>
+    </div>`).join('');
+})();
+
+/* ── Report monthly chart ────────────────────── */
+(function buildMonthlyChart() {
+  const chart = document.getElementById('report-monthly-chart');
+  if (!chart) return;
+  chart.innerHTML = ['W1','W2','W3','W4'].map(w => `
+    <div class="act-col">
+      <div class="act-bar-wrap"><div class="act-bar empty" style="height:4%"></div></div>
+      <div class="act-day">${w}</div>
+    </div>`).join('');
+})();
+
+/* ── Peak hours chart ────────────────────────── */
+(function buildPeakChart() {
+  const chart = document.getElementById('peak-hours-chart');
+  if (!chart) return;
+  chart.innerHTML = ['6am','9am','12p','3pm','6pm','9pm','12a'].map(l => `
+    <div class="act-col">
+      <div class="act-bar-wrap"><div class="act-bar empty" style="height:4%"></div></div>
+      <div class="act-day" style="font-size:9px">${l}</div>
+    </div>`).join('');
+})();
+
+/* ── Streak days ─────────────────────────────── */
+(function buildStreakDays() {
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const el = document.getElementById('streak-days');
+  if (!el) return;
+  el.innerHTML = ['M','T','W','T','F','S','S'].map((d, i) =>
+    `<div class="streak-day ${i === todayIdx ? 'today' : ''}">${d}</div>`
+  ).join('');
+})();
+
+/* ── Heatmap ─────────────────────────────────── */
+(function buildHeatmap() {
+  const el = document.getElementById('heatmap');
+  if (!el) return;
+  const cells = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const bg = i === 0
+      ? 'background:rgba(59,158,255,0.25);border:1px solid rgba(59,158,255,0.4)'
+      : 'background:var(--bg-card-2);border:1px solid var(--border)';
+    cells.push(`<div style="width:100%;aspect-ratio:1;border-radius:3px;${bg}" title="${d.toDateString()}"></div>`);
+  }
+  const rem = 30 % 7;
+  if (rem) for (let p = 0; p < 7 - rem; p++) cells.unshift(`<div style="width:100%;aspect-ratio:1;border-radius:3px;opacity:0"></div>`);
+  el.innerHTML = cells.join('');
+})();
+
+/* ── Ring animation ──────────────────────────── */
+(function animateRing() {
+  const ringFill = document.getElementById('ring-fill');
+  if (!ringFill) return;
+  setTimeout(() => {
+    ringFill.style.strokeDashoffset = 2 * Math.PI * 45;
+  }, 400);
+})();
+</script>
+
 </body>
 </html>
