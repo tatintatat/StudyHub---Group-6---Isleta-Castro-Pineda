@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>StudyHub — Create Account</title>
   <link rel="stylesheet" href="/static/css/auth.css" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
 </head>
 <body>
 
   <div class="hub-root">
 
-    <!-- Left branding panel -->
     <aside class="side-panel">
       <div class="brand">
         <div class="brand-icon">
@@ -23,7 +21,6 @@
         <div class="brand-name">StudyHub</div>
         <div class="brand-tagline">Your intelligent learning companion</div>
       </div>
-
       <div class="side-features">
         <p class="side-headline">Start your<br><em>learning journey</em><br>today.</p>
         <ul class="feature-list">
@@ -34,21 +31,17 @@
           <li><span class="feat-dot"></span>Focus timer with Pomodoro sessions</li>
         </ul>
       </div>
-
       <div class="side-footer">© 2026 StudyHub. All rights reserved.</div>
     </aside>
 
-    <!-- Right form panel -->
     <main class="form-panel">
       <div class="auth-card">
 
-        <!-- ERROR / SUCCESS BANNER -->
-        <div id="alert-box" class="alert-box" style="display:none;"></div>
+        <div id="alert-box" class="alert-box"></div>
 
         <h1 class="form-title">Create your account</h1>
         <p class="form-subtitle">Join StudyHub — it's completely free</p>
 
-        <!-- Google Button -->
         <a href="/auth/google" class="google-btn">
           <svg class="google-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -65,33 +58,35 @@
           <div class="divider-line"></div>
         </div>
 
-        <!-- Signup Form -->
-        <form id="signup-form" novalidate>
+        <form id="signup-form" novalidate autocomplete="off">
+          <!-- Honeypot fields -->
+          <input type="text"     style="display:none" tabindex="-1" aria-hidden="true" />
+          <input type="password" style="display:none" tabindex="-1" aria-hidden="true" />
 
           <div class="field-row">
             <div class="field-group">
               <label class="field-label" for="su-first">First name</label>
               <input id="su-first" name="first_name" type="text" class="field-input"
-                     placeholder="Alex" autocomplete="given-name" />
+                     placeholder="Alex" autocomplete="new-password" />
             </div>
             <div class="field-group">
               <label class="field-label" for="su-last">Last name</label>
               <input id="su-last" name="last_name" type="text" class="field-input"
-                     placeholder="Cruz" autocomplete="family-name" />
+                     placeholder="Cruz" autocomplete="new-password" />
             </div>
           </div>
 
           <div class="field-group">
             <label class="field-label" for="su-username">Username</label>
             <input id="su-username" name="username" type="text" class="field-input"
-                   placeholder="alex_study" autocomplete="off" />
-            <span class="field-hint">Letters, numbers and underscores only (3–30 characters)</span>
+                   placeholder="alex_study" autocomplete="new-password" />
+            <span class="field-hint">3–30 characters: letters, numbers, underscores</span>
           </div>
 
           <div class="field-group">
             <label class="field-label" for="su-email">Email address</label>
-            <input id="su-email" name="email" type="email" class="field-input"
-                   placeholder="alex@email.com" autocomplete="email" />
+            <input id="su-email" name="email" type="text" class="field-input"
+                   placeholder="alex@email.com" autocomplete="new-password" />
           </div>
 
           <div class="field-group">
@@ -99,14 +94,13 @@
             <div class="pw-wrap">
               <input id="su-pw" name="password" type="password" class="field-input"
                      placeholder="At least 8 characters" autocomplete="new-password" />
-              <button type="button" class="pw-toggle" onclick="togglePw('su-pw')" aria-label="Show password">
+              <button type="button" class="pw-toggle" data-target="su-pw" aria-label="Show password">
                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
               </button>
             </div>
-            <!-- Password strength bar -->
             <div class="pw-strength" id="pw-strength" style="display:none;">
               <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
               <span class="pw-label" id="pw-label"></span>
@@ -115,13 +109,13 @@
 
           <button type="submit" class="submit-btn" id="signup-btn">
             <span class="btn-text">Create my account</span>
-            <span class="btn-spinner" style="display:none;">Creating account…</span>
+            <span class="btn-spinner" style="display:none;"></span>
           </button>
 
         </form>
 
         <p class="switch-text">
-          Already a member? <a class="switch-link" href="/index.html">Sign in</a>
+          Already a member? <a class="switch-link" href="/">Sign in</a>
         </p>
         <p class="terms-text">
           By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
@@ -132,106 +126,131 @@
   </div>
 
   <script>
-    // Toggle password visibility
-    function togglePw(id) {
-      const input = document.getElementById(id);
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
+    // Wipe autofill values shortly after paint, skip focused fields
+    setTimeout(function () {
+      ['su-first','su-last','su-username','su-email','su-pw'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && !el.matches(':focus')) el.value = '';
+      });
+    }, 50);
 
-    // Show alert
+    /* Password-visibility toggle */
+    document.querySelectorAll('.pw-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var inp = document.getElementById(btn.dataset.target);
+        if (!inp) return;
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+    });
+
+    /* Clear invalid state on input */
+    document.querySelectorAll('.field-input').forEach(function(inp) {
+      inp.addEventListener('input', function() { inp.classList.remove('is-invalid'); });
+    });
+
+    /* Alert helper */
     function showAlert(msg, type) {
-      const box = document.getElementById('alert-box');
-      box.textContent = msg;
-      box.className = 'alert-box is-' + type;
+      var box = document.getElementById('alert-box');
+      box.textContent   = msg;
+      box.className     = 'alert-box is-' + type;
       box.style.display = 'block';
     }
 
-    // Password strength meter
-    document.getElementById('su-pw').addEventListener('input', function() {
-      const val      = this.value;
-      const strength = document.getElementById('pw-strength');
-      const fill     = document.getElementById('pw-fill');
-      const label    = document.getElementById('pw-label');
+    /* Password strength */
+    var suPw    = document.getElementById('su-pw');
+    var pwStr   = document.getElementById('pw-strength');
+    var pwFill  = document.getElementById('pw-fill');
+    var pwLabel = document.getElementById('pw-label');
 
-      if (!val) { strength.style.display = 'none'; return; }
-      strength.style.display = 'flex';
-
-      let score = 0;
-      if (val.length >= 8)           score++;
-      if (val.length >= 12)          score++;
-      if (/[A-Z]/.test(val))         score++;
-      if (/[0-9]/.test(val))         score++;
-      if (/[^A-Za-z0-9]/.test(val))  score++;
-
-      const levels = [
-        { width: '20%',  color: '#e74c3c', text: 'Very weak' },
-        { width: '40%',  color: '#e67e22', text: 'Weak'      },
-        { width: '60%',  color: '#f1c40f', text: 'Fair'      },
-        { width: '80%',  color: '#2ecc71', text: 'Good'      },
-        { width: '100%', color: '#27ae60', text: 'Strong'    },
-      ];
-      const lv = levels[Math.min(score, 4)];
-      fill.style.width      = lv.width;
-      fill.style.background = lv.color;
-      label.textContent     = lv.text;
-      label.style.color     = lv.color;
+    suPw && suPw.addEventListener('input', function() {
+      var v = suPw.value;
+      if (!v) { pwStr.style.display = 'none'; return; }
+      pwStr.style.display = 'flex';
+      var score = 0;
+      if (v.length >= 8)           score++;
+      if (v.length >= 12)          score++;
+      if (/[A-Z]/.test(v))         score++;
+      if (/[0-9]/.test(v))         score++;
+      if (/[^A-Za-z0-9]/.test(v))  score++;
+      var lvl = [
+        { w:'20%',  c:'#f87171', t:'Very weak' },
+        { w:'40%',  c:'#fb923c', t:'Weak'      },
+        { w:'60%',  c:'#fbbf24', t:'Fair'      },
+        { w:'80%',  c:'#34d399', t:'Good'      },
+        { w:'100%', c:'#10b981', t:'Strong'    }
+      ][Math.min(score, 4)];
+      pwFill.style.width      = lvl.w;
+      pwFill.style.background = lvl.c;
+      pwLabel.textContent     = lvl.t;
+      pwLabel.style.color     = lvl.c;
     });
 
-    // Signup form submit
+    /* Signup submit */
     document.getElementById('signup-form').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const first_name = document.getElementById('su-first').value.trim();
-      const last_name  = document.getElementById('su-last').value.trim();
-      const username   = document.getElementById('su-username').value.trim().toLowerCase();
-      const email      = document.getElementById('su-email').value.trim().toLowerCase();
-      const password   = document.getElementById('su-pw').value;
-      const btn        = document.getElementById('signup-btn');
+      var first_name = document.getElementById('su-first').value.trim();
+      var last_name  = document.getElementById('su-last').value.trim();
+      var username   = document.getElementById('su-username').value.trim().toLowerCase();
+      var email      = document.getElementById('su-email').value.trim().toLowerCase();
+      var password   = document.getElementById('su-pw').value;
+      var btn        = document.getElementById('signup-btn');
 
-      // Validation
-      if (!first_name || !last_name) {
-        showAlert('Please enter your first and last name.', 'error'); return;
+      var ok = true;
+      function markBad(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.add('is-invalid');
+        ok = false;
       }
+
+      if (!first_name) markBad('su-first');
+      if (!last_name)  markBad('su-last');
+      if (!ok) { showAlert('Please enter your first and last name.', 'error'); return; }
+
       if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-        showAlert('Username must be 3–30 characters: letters, numbers, underscores only.', 'error'); return;
+        markBad('su-username');
+        showAlert('Username: 3-30 characters, letters/numbers/underscores only.', 'error');
+        return;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showAlert('Please enter a valid email address.', 'error'); return;
+        markBad('su-email');
+        showAlert('Please enter a valid email address.', 'error');
+        return;
       }
       if (password.length < 8) {
-        showAlert('Password must be at least 8 characters.', 'error'); return;
+        markBad('su-pw');
+        showAlert('Password must be at least 8 characters.', 'error');
+        return;
       }
 
-      // Show loading
       btn.disabled = true;
-      btn.querySelector('.btn-text').style.display   = 'none';
+      btn.querySelector('.btn-text').style.display    = 'none';
       btn.querySelector('.btn-spinner').style.display = 'inline';
 
       try {
-        const res  = await fetch('/api/signup', {
+        var res  = await fetch('/api/signup', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ first_name, last_name, username, email, password })
         });
-        const data = await res.json();
+        var data = await res.json();
 
         if (res.ok) {
-          showAlert('Account created! Redirecting…', 'success');
-          setTimeout(() => { window.location.href = data.redirect || '/dashboard'; }, 700);
+          showAlert('Account created! Redirecting to sign in...', 'success');
+          setTimeout(function() { window.location.href = data.redirect || '/login?registered=1'; }, 800);
         } else {
           showAlert(data.error || 'Sign up failed. Please try again.', 'error');
           btn.disabled = false;
-          btn.querySelector('.btn-text').style.display   = 'inline';
+          btn.querySelector('.btn-text').style.display    = 'inline';
           btn.querySelector('.btn-spinner').style.display = 'none';
         }
-      } catch {
+      } catch(err) {
         showAlert('Network error. Please try again.', 'error');
         btn.disabled = false;
-        btn.querySelector('.btn-text').style.display   = 'inline';
+        btn.querySelector('.btn-text').style.display    = 'inline';
         btn.querySelector('.btn-spinner').style.display = 'none';
       }
     });
   </script>
-
 </body>
 </html>
