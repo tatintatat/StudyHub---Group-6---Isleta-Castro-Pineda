@@ -382,6 +382,7 @@
   <div class="page-body" id="view-reports">
     <div class="welcome-row">
       <div class="welcome-text"><h1>Study <em>Reports</em></h1><p>Detailed breakdown of your learning performance.</p></div>
+      <button class="post-btn" onclick="openSessionModal()" style="margin-bottom:4px;"><i class="fa-solid fa-plus" style="margin-right:6px;"></i>Log Session</button>
     </div>
     <div class="stats-grid">
       <div class="stat-card c-blue"><div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div><div class="stat-val" id="report-sessions">0</div><div class="stat-label">Sessions this month</div></div>
@@ -392,24 +393,31 @@
     <div class="two-col">
       <div class="card">
         <div class="card-header"><div><div class="card-title">Monthly Overview</div><div class="card-subtitle">Study hours per week</div></div></div>
-        <div class="activity-chart" style="height:120px;" id="report-monthly-chart"></div>
+        <div class="activity-chart" style="height:120px;" id="report-monthly-chart">
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">W1</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">W2</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">W3</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">W4</div></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-header"><div><div class="card-title">Subject Breakdown</div><div class="card-subtitle">Time per subject</div></div></div>
         <div id="subject-breakdown">
-          <div class="empty-state" style="padding:1.5rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying to see your breakdown</div></div>
+          <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying to see your breakdown</div></div>
         </div>
       </div>
     </div>
     <div class="card" style="margin-bottom:1.75rem;">
-      <div class="card-header"><div><div class="card-title">Study Log</div><div class="card-subtitle">All your sessions in one place</div></div></div>
-      <div id="study-log">
-        <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Your study sessions will be logged here automatically</div></div>
+      <div class="card-header">
+        <div><div class="card-title">Study Log</div><div class="card-subtitle">All your sessions in one place</div></div>
+        <a class="card-action" href="#" onclick="openSessionModal();return false;">+ Log Session</a>
+      </div>
+      <div id="study-log-reports">
+        <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Start logging your study sessions to track progress</div></div>
       </div>
     </div>
   </div>
-
-  <div class="page-body" id="view-statistics">
+<div class="page-body" id="view-statistics">
     <div class="welcome-row">
       <div class="welcome-text"><h1>Your <em>Statistics</em></h1><p>Deep dive into your learning patterns and performance.</p></div>
     </div>
@@ -759,10 +767,9 @@
         var d = new Date(); d.setDate(d.getDate() - i);
         var key = d.toISOString().split('T')[0];
         var mins = data[key] || 0;
-        var opacity = mins > 0 ? Math.min(0.85, 0.15 + (mins / 120) * 0.7) : 0;
-        var bg = mins > 0 ? 'background:rgba(59,158,255,' + opacity + ')' : 'background:var(--bg-card-2)';
-        var border = i === 0 ? 'border:1px solid rgba(59,158,255,0.4)' : 'border:1px solid var(--border)';
-        cells.push('<div style="width:100%;aspect-ratio:1;border-radius:3px;' + bg + ';' + border + '" title="' + d.toDateString() + ': ' + mins + ' min"></div>');
+        var todayClass = i === 0 ? 'today' : '';
+        var level = mins > 90 ? 'filled-4' : mins > 60 ? 'filled-3' : mins > 30 ? 'filled-2' : mins > 0 ? 'filled-1' : 'empty';
+        cells.push('<div class="heatmap-cell ' + level + ' ' + todayClass + '" title="' + d.toDateString() + ': ' + mins + ' min"></div>');
       }
       var rem = 30 % 7;
       if (rem) for (var p = 0; p < 7 - rem; p++) cells.unshift('<div style="width:100%;aspect-ratio:1;border-radius:3px;opacity:0"></div>');
@@ -771,8 +778,8 @@
       var cells = [];
       for (var i = 29; i >= 0; i--) {
         var d = new Date(); d.setDate(d.getDate() - i);
-        var bg = i === 0 ? 'background:rgba(59,158,255,0.25);border:1px solid rgba(59,158,255,0.4)' : 'background:var(--bg-card-2);border:1px solid var(--border)';
-        cells.push('<div style="width:100%;aspect-ratio:1;border-radius:3px;' + bg + '" title="' + d.toDateString() + '"></div>');
+        var todayClass = i === 0 ? 'today' : '';
+        cells.push('<div class="heatmap-cell empty ' + todayClass + '" title="' + d.toDateString() + '"></div>');
       }
       var rem = 30 % 7;
       if (rem) for (var p = 0; p < 7 - rem; p++) cells.unshift('<div style="width:100%;aspect-ratio:1;border-radius:3px;opacity:0"></div>');
@@ -1313,6 +1320,7 @@
   var notifDropdown = document.getElementById('notif-dropdown');
 
   notifBtn.addEventListener('click', function(e) {
+    if (notifDropdown.contains(e.target)) return;
     e.stopPropagation();
     notifDropdown.classList.toggle('open');
     if (notifDropdown.classList.contains('open')) loadNotifications();
@@ -1406,28 +1414,71 @@
       var goalPct = Math.min(100, Math.round(((stats.weekly_done || 0) / 10) * 100));
       document.getElementById('report-goal').textContent = goalPct + '%';
 
+      // Monthly chart
       var mres = await fetch('/api/sessions/monthly');
       var monthly = await mres.json();
       var chart = document.getElementById('report-monthly-chart');
       var maxH = Math.max.apply(null, monthly.map(function(d) { return d.hours; })) || 1;
-      chart.innerHTML = monthly.map(function(d) {
-        var h = d.hours > 0 ? Math.max(8, (d.hours / maxH) * 80) : 4;
-        var cls = d.hours > 0 ? 'filled' : 'empty';
-        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + cls + '" style="height:' + h + '%"></div></div><div class="act-day">' + d.week + '</div></div>';
-      }).join('');
+      var hasData = monthly.some(function(d) { return d.hours > 0; });
+      if (hasData) {
+        chart.innerHTML = monthly.map(function(d) {
+          var h = Math.max(12, (d.hours / maxH) * 80);
+          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar filled" style="height:' + h + '%"></div></div><div class="act-day">' + d.week + '</div></div>';
+        }).join('');
+      } else {
+        chart.innerHTML = monthly.map(function(d) {
+          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">' + d.week + '</div></div>';
+        }).join('');
+      }
 
+      // Subject breakdown
       var bres = await fetch('/api/sessions/subject-breakdown');
       var breakdown = await bres.json();
       var bel = document.getElementById('subject-breakdown');
-      if (breakdown && breakdown.length > 0) {
+      var hasBreakdown = breakdown && breakdown.some(function(s) { return s.total > 0; });
+      if (hasBreakdown) {
         var maxTotal = Math.max.apply(null, breakdown.map(function(d) { return d.total; })) || 1;
         bel.innerHTML = '<div class="breakdown-list">' + breakdown.map(function(s) {
           var pct = Math.round((s.total / maxTotal) * 100);
           var hours = Math.round(s.total / 60 * 10) / 10;
           return '<div class="breakdown-item"><div class="breakdown-color" style="background:' + (s.color || '#3b9eff') + '"></div><div class="breakdown-name">' + escapeHtml(s.name) + '</div><div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:' + pct + '%;background:' + (s.color || '#3b9eff') + '"></div></div><div class="breakdown-time">' + hours + 'h</div></div>';
         }).join('') + '</div>';
+      } else {
+        bel.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying to see your breakdown</div></div>';
       }
-      loadStudyLog();
+
+      // Best day calculation
+      var sres = await fetch('/api/sessions/weekly');
+      var weekly = await sres.json();
+      var bestDay = weekly.reduce(function(best, d) {
+        return (d.minutes > best.minutes) ? d : best;
+      }, { minutes: 0, day: '—' });
+      document.getElementById('report-best').textContent = bestDay.minutes > 0 ? bestDay.day : '—';
+
+      // Study log for reports page
+      loadStudyLogForReports();
+    } catch (err) {}
+  }
+
+  async function loadStudyLogForReports() {
+    try {
+      var res = await fetch('/api/sessions');
+      var sessions = await res.json();
+      var el = document.getElementById('study-log-reports');
+      if (!el) return;
+      if (!sessions || sessions.length === 0) {
+        el.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Start logging your study sessions to track progress</div></div>';
+        return;
+      }
+      el.innerHTML = '<div class="log-list">' + sessions.slice(0, 15).map(function(s) {
+        var color = s.subject_color || '#3b9eff';
+        var name = s.subject_name || 'General';
+        var date = new Date(s.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var hours = Math.floor(s.duration_minutes / 60);
+        var mins = s.duration_minutes % 60;
+        var timeStr = hours > 0 ? hours + 'h ' + mins + 'm' : mins + ' min';
+        return '<div class="log-item"><div class="log-color" style="background:' + color + '"></div><div class="log-info"><div class="log-subject">' + escapeHtml(name) + '</div><div class="log-meta">' + date + (s.notes ? ' — ' + escapeHtml(s.notes.substring(0, 40)) : '') + '</div></div><div class="log-duration">' + timeStr + '</div></div>';
+      }).join('') + '</div>';
     } catch (err) {}
   }
 
@@ -1447,13 +1498,19 @@
       var peaks = await pres.json();
       var labels = {6: '6am', 9: '9am', 12: '12p', 15: '3pm', 18: '6pm', 21: '9pm', 0: '12a'};
       var maxPeak = Math.max.apply(null, Object.values(peaks)) || 1;
+      var hasPeakData = Object.values(peaks).some(function(v) { return v > 0; });
       var pchart = document.getElementById('peak-hours-chart');
-      pchart.innerHTML = [6, 9, 12, 15, 18, 21, 0].map(function(h) {
-        var val = peaks[h] || 0;
-        var pct = val > 0 ? Math.max(8, (val / maxPeak) * 80) : 4;
-        var cls = val > 0 ? 'filled' : 'empty';
-        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + cls + '" style="height:' + pct + '%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
-      }).join('');
+      if (hasPeakData) {
+        pchart.innerHTML = [6, 9, 12, 15, 18, 21, 0].map(function(h) {
+          var val = peaks[h] || 0;
+          var pct = Math.max(16, (val / maxPeak) * 80);
+          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar filled" style="height:' + pct + '%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
+        }).join('');
+      } else {
+        pchart.innerHTML = [6, 9, 12, 15, 18, 21, 0].map(function(h) {
+          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:16%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
+        }).join('');
+      }
 
       var sres = await fetch('/api/sessions');
       var sessions = await sres.json();
