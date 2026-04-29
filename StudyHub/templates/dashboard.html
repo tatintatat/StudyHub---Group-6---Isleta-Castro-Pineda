@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,195 +10,169 @@
 </head>
 <body>
 
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<!-- ─── OVERLAYS ─── -->
 <div class="toast-container" id="toast-container"></div>
 
 <div class="search-overlay" id="search-overlay">
   <div class="search-box-wrap">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" class="search-box" id="search-input" placeholder="Search posts, users, topics..." autocomplete="off">
+    <i class="fa-solid fa-magnifying-glass search-icon-inner"></i>
+    <input type="text" class="search-box" id="search-input"
+           placeholder="Search posts, users, topics…" autocomplete="off">
     <button class="search-close" id="search-close"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <div class="search-results" id="search-results"></div>
+  <div class="search-hint">Press <kbd style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:12px;">Esc</kbd> to close</div>
 </div>
 
-<nav class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    <div class="brand-icon-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#e8f0f8" stroke-width="2" stroke-linecap="round">
+<!-- ─── TOP NAVIGATION ─── -->
+<nav class="topnav" id="topnav">
+  <!-- Brand -->
+  <a class="nav-brand" href="#" onclick="return false;">
+    <div class="brand-gem">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
       </svg>
     </div>
-    <span class="brand-label">StudyHub</span>
+    <span class="brand-wordmark">StudyHub</span>
+  </a>
+
+  <!-- Nav links -->
+  <div class="nav-links">
+    <a class="nav-link active" data-view="dashboard" href="#" onclick="return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      Dashboard
+    </a>
+    <a class="nav-link" data-view="feed" href="#" onclick="return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Community
+    </a>
+    <a class="nav-link" data-view="reports" href="#" onclick="return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Reports
+    </a>
+    <a class="nav-link" data-view="statistics" href="#" onclick="return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Stats
+    </a>
+
+    <div class="nav-divider"></div>
+
+    <a class="nav-link" href="#" onclick="openSubjectModal();return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Subjects
+      <span id="nav-subject-count" style="background:rgba(139,124,248,0.15);color:var(--a-violet);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;">0</span>
+    </a>
+    <a class="nav-link" href="#" onclick="openFlashcardModal();return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 4v16"/>
+      </svg>
+      Flashcards
+    </a>
+    <a class="nav-link" href="#" onclick="openTimerModal();return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Timer
+    </a>
   </div>
 
-  <div class="profile-card" id="profile-card">
-    <div id="sidebar-profile-avatar"></div>
-    <div class="profile-card-name">{{ user.first_name }} {{ user.last_name }}</div>
-    <div class="profile-card-handle">@{{ user.username }}</div>
-    <div class="profile-card-stats">
-      <div class="profile-stat"><div class="profile-stat-val" id="stat-posts">0</div><div class="profile-stat-label">Posts</div></div>
-      <div class="profile-stat"><div class="profile-stat-val" id="stat-likes">0</div><div class="profile-stat-label">Likes</div></div>
-      <div class="profile-stat"><div class="profile-stat-val" id="stat-rank">#-</div><div class="profile-stat-label">Rank</div></div>
-    </div>
-  </div>
-
-  <div class="sidebar-scroll">
-    <div class="nav-section">
-      <div class="nav-label">Menu</div>
-      <a href="#" class="nav-item active" data-view="dashboard">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-        </svg>
-        Dashboard
-      </a>
-      <a href="#" class="nav-item" data-view="feed">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-          <polyline points="22,6 12,13 2,6"/>
-        </svg>
-        News Feed
-      </a>
-      <a href="#" class="nav-item" data-view="reports">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        Reports
-      </a>
-      <a href="#" class="nav-item" data-view="statistics">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
-        Statistics
-      </a>
+  <!-- Right actions -->
+  <div class="nav-right">
+    <!-- Search -->
+    <div class="nav-icon-btn" id="search-btn" title="Search">
+      <i class="fa-solid fa-magnifying-glass"></i>
     </div>
 
-    <div class="nav-section">
-      <div class="nav-label">Study</div>
-      <a href="#" class="nav-item" onclick="openSubjectModal();return false;">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
-        Subjects
-        <span class="nav-badge" id="nav-subject-count">0</span>
-      </a>
-      <a href="#" class="nav-item" onclick="openFlashcardModal();return false;">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 4v16"/>
-        </svg>
-        Flashcards
-      </a>
-      <a href="#" class="nav-item" onclick="openTimerModal();return false;">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Focus Timer
-      </a>
-      <a href="#" class="nav-item" onclick="switchView('feed');return false;">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        Study Groups
-      </a>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-label">Topics</div>
-      <a href="#" class="nav-item" data-topic="Math">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
-        Math
-      </a>
-      <a href="#" class="nav-item" data-topic="Science">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        Science
-      </a>
-      <a href="#" class="nav-item" data-topic="Notes">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        Notes
-      </a>
-      <a href="#" class="nav-item" data-topic="Help Needed">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        Help Needed
-      </a>
-    </div>
-  </div>
-
-  <div class="sidebar-bottom">
-    {% if user.profile_picture %}
-    <div class="user-row">
-      <img src="{{ user.profile_picture }}" class="user-ava" alt="Avatar">
-      <div class="user-info">
-        <div class="user-name-sm">{{ user.first_name }} {{ user.last_name }}</div>
-        <div class="user-role">Student</div>
+    <!-- Notifications -->
+    <div class="nav-icon-btn" id="notif-btn" title="Notifications" style="position:relative;">
+      <i class="fa-solid fa-bell"></i>
+      <div class="notif-dot" id="notif-dot" style="display:none;"></div>
+      <!-- Dropdown -->
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-header">
+          <div class="notif-header-title">Notifications</div>
+          <div class="notif-header-action" id="notif-read-all">Mark all read</div>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">No notifications yet</div>
+        </div>
       </div>
-      <i class="fa-solid fa-arrow-right-from-bracket logout-icon" id="logout-btn" title="Sign out"></i>
     </div>
-    {% else %}
-    <div class="user-row">
-      <div class="user-ava-initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
-      <div class="user-info">
-        <div class="user-name-sm">{{ user.first_name }} {{ user.last_name }}</div>
-        <div class="user-role">Student</div>
+
+    <!-- Theme -->
+    <div class="theme-btn" id="theme-btn" title="Toggle theme">
+      <i class="fa-solid fa-sun" id="theme-icon"></i>
+    </div>
+
+    <!-- User -->
+    <div class="nav-user" id="nav-user">
+      <div class="nav-user-ava" id="nav-user-ava">
+        {% if user.profile_picture %}
+        <img src="{{ user.profile_picture }}" alt="">
+        {% else %}
+        {{ user.first_name[0] }}{{ user.last_name[0] }}
+        {% endif %}
       </div>
-      <i class="fa-solid fa-arrow-right-from-bracket logout-icon" id="logout-btn" title="Sign out"></i>
+      <span class="nav-user-name">{{ user.first_name }}</span>
+      <i class="fa-solid fa-arrow-right-from-bracket" id="logout-btn"
+         style="font-size:12px;color:var(--txt-muted);cursor:pointer;transition:color 0.2s;"
+         title="Sign out"
+         onmouseenter="this.style.color='var(--a-rose)'"
+         onmouseleave="this.style.color='var(--txt-muted)'"></i>
     </div>
-    {% endif %}
+
+    <!-- Mobile hamburger -->
+    <div class="nav-hamburger" id="nav-hamburger">
+      <i class="fa-solid fa-bars"></i>
+    </div>
   </div>
 </nav>
 
-<div class="main-wrap">
-  <header class="topbar">
-    <div class="topbar-left">
-      <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
-      <div class="page-title" id="page-title">Dashboard</div>
-      <div class="page-subtitle" id="page-subtitle">Overview of your study activity</div>
-    </div>
-    <div class="topbar-right">
-      <button class="topbar-btn" id="search-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span class="hide-mobile">Search</span>
-      </button>
-      <button class="topbar-btn notification-btn" id="notif-btn" style="position:relative;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span class="notification-dot" id="notif-dot" style="display:none"></span>
-        <div class="notif-dropdown" id="notif-dropdown">
-          <div class="notif-header">
-            <div class="notif-header-title">Notifications</div>
-            <div class="notif-header-action" id="notif-read-all">Mark all read</div>
-          </div>
-          <div class="notif-list" id="notif-list"><div class="notif-empty">No notifications yet</div></div>
-        </div>
-      </button>
-    </div>
-  </header>
+<!-- Mobile drawer -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <a class="nav-link active" data-view="dashboard">
+    <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    Dashboard
+  </a>
+  <a class="nav-link" data-view="feed"><i class="fa-solid fa-users" style="width:16px;"></i> Community</a>
+  <a class="nav-link" data-view="reports"><i class="fa-solid fa-chart-line" style="width:16px;"></i> Reports</a>
+  <a class="nav-link" data-view="statistics"><i class="fa-solid fa-chart-bar" style="width:16px;"></i> Statistics</a>
+  <a class="nav-link" href="#" onclick="openSubjectModal();return false;"><i class="fa-solid fa-book" style="width:16px;"></i> Subjects</a>
+  <a class="nav-link" href="#" onclick="openFlashcardModal();return false;"><i class="fa-solid fa-layer-group" style="width:16px;"></i> Flashcards</a>
+  <a class="nav-link" href="#" onclick="openTimerModal();return false;"><i class="fa-solid fa-clock" style="width:16px;"></i> Focus Timer</a>
+</div>
 
+<!-- ─────────────────────────────────────────────
+     MAIN CONTENT
+───────────────────────────────────────────── -->
+<div class="main-wrap">
+
+  <!-- ═══ DASHBOARD ═══ -->
   <div class="page-body active" id="view-dashboard">
-    <div class="welcome-row">
-      <div class="welcome-text">
+    <div class="page-header">
+      <div class="page-header-left">
         <h1>Good day, <em>{{ user.first_name }}</em></h1>
-        <p>Here is what is happening with your studies today.</p>
+        <div class="page-header-sub">Here's what's happening with your studies today</div>
       </div>
       <div class="date-chip">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -210,6 +184,7 @@
       </div>
     </div>
 
+    <!-- Stat cards -->
     <div class="stats-grid">
       <div class="stat-card c-blue">
         <div class="stat-delta delta-zero" id="delta-subjects">New</div>
@@ -227,36 +202,52 @@
         <div class="stat-delta delta-zero" id="delta-hours">New</div>
         <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
         <div class="stat-val" id="dash-hours">0h</div>
-        <div class="stat-label">Study hours</div>
+        <div class="stat-label">Study Hours</div>
       </div>
       <div class="stat-card c-amber">
         <div class="stat-delta delta-up" id="delta-streak">Active</div>
         <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
         <div class="stat-val" id="dash-streak">1</div>
-        <div class="stat-label">Day streak</div>
+        <div class="stat-label">Day Streak</div>
       </div>
     </div>
 
-    <div class="two-col">
+    <!-- Charts row -->
+    <div class="grid-2">
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">Weekly Activity</div><div class="card-subtitle">Study minutes per day</div></div>
+          <div>
+            <div class="card-title">Weekly Activity</div>
+            <div class="card-subtitle">Study minutes per day</div>
+          </div>
           <a class="card-action" href="#" onclick="switchView('reports');return false;">View all</a>
         </div>
         <div class="activity-chart" id="activity-chart"></div>
       </div>
+
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">Weekly Goal</div><div class="card-subtitle">10 hours target</div></div>
+          <div>
+            <div class="card-title">Weekly Goal</div>
+            <div class="card-subtitle">10 hours target</div>
+          </div>
         </div>
         <div class="goal-ring-wrap">
-          <div class="goal-ring" id="goal-ring-wrap">
+          <div class="goal-ring">
             <svg width="100" height="100" viewBox="0 0 100 100">
-              <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b9eff"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs>
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#8b7cf8"/>
+                  <stop offset="100%" stop-color="#22d3ee"/>
+                </linearGradient>
+              </defs>
               <circle class="goal-ring-bg" cx="50" cy="50" r="45"/>
               <circle class="goal-ring-fill" cx="50" cy="50" r="45" id="ring-fill"/>
             </svg>
-            <div class="goal-ring-label"><div class="goal-pct" id="goal-pct">0%</div><div class="goal-unit">done</div></div>
+            <div class="goal-ring-label">
+              <div class="goal-pct" id="goal-pct">0%</div>
+              <div class="goal-unit">done</div>
+            </div>
           </div>
           <div class="goal-info">
             <div class="goal-title" id="goal-title">0 / 10 hrs studied</div>
@@ -267,82 +258,136 @@
       </div>
     </div>
 
-    <div class="three-col">
+    <!-- Lower dashboard -->
+    <div class="grid-3">
+      <!-- Subjects -->
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">My Subjects</div><div class="card-subtitle">Active courses</div></div>
+          <div>
+            <div class="card-title">My Subjects</div>
+            <div class="card-subtitle">Active courses</div>
+          </div>
           <a class="card-action" href="#" onclick="openSubjectModal();return false;">+ Add</a>
         </div>
         <div class="subject-list" id="subject-list">
-          <div class="empty-state"><i class="fa-solid fa-book-open empty-icon-fa"></i><div>No subjects yet</div><div class="empty-sub">Add your first subject to get started</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title">Recent Activity</div><div class="card-subtitle">What you have been up to</div></div>
-        </div>
-        <div class="activity-list" id="activity-list">
-          <div class="activity-item">
-            <div class="act-dot-icon" style="background:rgba(59,158,255,0.1)"><i class="fa-solid fa-party-horn" style="color:#3b9eff;font-size:13px;"></i></div>
-            <div class="act-text"><div class="act-title">Account created</div><div class="act-time">Just now — Welcome to StudyHub!</div></div>
+          <div class="empty-state">
+            <i class="fa-solid fa-book-open empty-icon-fa"></i>
+            <div>No subjects yet</div>
+            <div class="empty-sub">Add your first subject to start tracking</div>
           </div>
         </div>
       </div>
+
+      <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">Streak</div><div class="card-subtitle">Consecutive study days</div></div>
+          <div>
+            <div class="card-title">Recent Activity</div>
+            <div class="card-subtitle">What you've been up to</div>
+          </div>
+        </div>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item">
+            <div class="act-dot-icon" style="background:rgba(139,124,248,0.1)">
+              <i class="fa-solid fa-star" style="color:var(--a-violet);font-size:13px;"></i>
+            </div>
+            <div class="act-text">
+              <div class="act-title">Account created</div>
+              <div class="act-time">Just now — Welcome to StudyHub!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Streak -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Streak</div>
+            <div class="card-subtitle">Consecutive study days</div>
+          </div>
         </div>
         <div class="streak-wrap">
           <div class="streak-num" id="streak-num">1</div>
-          <div class="streak-label"><i class="fa-solid fa-fire" style="color:#fbbf24;margin-right:4px;"></i>day streak</div>
+          <div class="streak-label"><i class="fa-solid fa-fire" style="color:var(--a-amber);margin-right:4px;"></i>day streak</div>
           <div class="streak-days" id="streak-days"></div>
         </div>
       </div>
     </div>
 
-    <div class="two-col">
+    <div class="grid-2">
+      <!-- Quick Actions -->
       <div class="card">
-        <div class="card-header"><div class="card-title">Quick Actions</div></div>
+        <div class="card-header">
+          <div class="card-title">Quick Actions</div>
+        </div>
         <div class="quick-actions">
           <button class="qa-btn" onclick="openTimerModal()">
-            <div class="qa-icon" style="background:rgba(59,158,255,0.1)"><i class="fa-solid fa-play" style="color:#3b9eff;font-size:13px;"></i></div>Start Session
+            <div class="qa-icon" style="background:rgba(139,124,248,0.12)"><i class="fa-solid fa-play" style="color:var(--a-violet);font-size:12px;"></i></div>
+            Start Session
           </button>
           <button class="qa-btn" onclick="openFlashcardModal()">
-            <div class="qa-icon" style="background:rgba(129,140,248,0.1)"><i class="fa-solid fa-layer-group" style="color:#818cf8;font-size:13px;"></i></div>New Flashcard
+            <div class="qa-icon" style="background:rgba(99,102,241,0.12)"><i class="fa-solid fa-layer-group" style="color:var(--a-indigo);font-size:12px;"></i></div>
+            New Flashcard
           </button>
           <button class="qa-btn" onclick="openNotesModal()">
-            <div class="qa-icon" style="background:rgba(52,211,153,0.1)"><i class="fa-solid fa-pen-to-square" style="color:#34d399;font-size:13px;"></i></div>Take Notes
+            <div class="qa-icon" style="background:rgba(52,211,153,0.12)"><i class="fa-solid fa-pen-to-square" style="color:var(--a-emerald);font-size:12px;"></i></div>
+            Take Notes
           </button>
           <button class="qa-btn" onclick="openTimerModal()">
-            <div class="qa-icon" style="background:rgba(251,191,36,0.1)"><i class="fa-solid fa-stopwatch" style="color:#fbbf24;font-size:13px;"></i></div>Pomodoro Timer
+            <div class="qa-icon" style="background:rgba(251,191,36,0.12)"><i class="fa-solid fa-stopwatch" style="color:var(--a-amber);font-size:12px;"></i></div>
+            Pomodoro Timer
           </button>
         </div>
       </div>
+
+      <!-- Account Overview -->
       <div class="card">
-        <div class="card-header"><div class="card-title">Account Overview</div></div>
+        <div class="card-header">
+          <div class="card-title">Account Overview</div>
+        </div>
         <div>
-          <div class="mini-stat-row"><span class="mini-stat-label">Username</span><span class="mini-stat-val">{{ user.username }}</span></div>
-          <div class="mini-stat-row"><span class="mini-stat-label">Email</span><span class="mini-stat-val" style="font-size:12px;font-weight:400">{{ user.email }}</span></div>
-          <div class="mini-stat-row"><span class="mini-stat-label">Member since</span><span class="mini-stat-val" style="font-size:12px;font-weight:400" id="member-since">—</span></div>
-          <div class="mini-stat-row"><span class="mini-stat-label">Auth method</span><span class="mini-stat-val" style="font-size:12px">{{ user.auth_provider | upper }}</span></div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Username</span>
+            <span class="mini-stat-val">{{ user.username }}</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Email</span>
+            <span class="mini-stat-val" style="font-size:12px;font-weight:400;">{{ user.email }}</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Member since</span>
+            <span class="mini-stat-val" style="font-size:12px;font-weight:400;" id="member-since">—</span>
+          </div>
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">Auth method</span>
+            <span class="mini-stat-val" style="font-size:12px;">{{ user.auth_provider | upper }}</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ═══ COMMUNITY FEED ═══ -->
   <div class="page-body" id="view-feed">
-    <div class="welcome-row">
-      <div class="welcome-text"><h1>Community <em>Feed</em></h1><p>Connect, share, and learn with fellow students.</p></div>
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Community <em>Feed</em></h1>
+        <div class="page-header-sub">Connect, share, and learn with fellow students</div>
+      </div>
     </div>
     <div class="feed-layout">
       <div class="feed-main">
         <div class="post-creator">
           <input type="text" class="post-creator-title-input" id="post-title" placeholder="Post title (e.g. Help with Algebra)">
-          <textarea class="post-creator-body" id="post-body" placeholder="Share a question, note, or idea with your classmates..."></textarea>
+          <textarea class="post-creator-body" id="post-body" placeholder="Share a question, note, or idea…"></textarea>
           <div class="post-creator-actions">
             <select class="post-topic-select" id="post-topic">
-              <option value="General">General</option><option value="Math">Math</option><option value="Science">Science</option>
-              <option value="Notes">Notes</option><option value="Help Needed">Help Needed</option>
+              <option value="General">General</option>
+              <option value="Math">Math</option>
+              <option value="Science">Science</option>
+              <option value="Notes">Notes</option>
+              <option value="Help Needed">Help Needed</option>
             </select>
             <button class="post-btn" id="post-submit">Post</button>
           </div>
@@ -353,101 +398,186 @@
           <button class="feed-tab" data-filter="liked">Liked</button>
         </div>
         <div id="posts-container">
-          <div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i><div>Loading posts...</div></div>
+          <div class="empty-state" style="padding:3rem 0">
+            <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
+            <div>Loading posts…</div>
+          </div>
         </div>
       </div>
       <div class="feed-sidebar">
         <div class="leaderboard-card">
-          <div class="leaderboard-header"><i class="fa-solid fa-trophy"></i><div class="leaderboard-title">Top Students</div></div>
+          <div class="leaderboard-header">
+            <i class="fa-solid fa-trophy"></i>
+            <div class="leaderboard-title">Top Students</div>
+          </div>
           <div id="leaderboard-list">
-            <div class="skeleton" style="height:36px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:36px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:36px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:36px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:36px"></div>
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
           </div>
         </div>
         <div class="online-card">
-          <div class="online-header"><i class="fa-solid fa-circle" style="font-size:8px"></i><div class="online-title">Online Now</div></div>
+          <div class="online-header">
+            <i class="fa-solid fa-circle" style="font-size:8px;color:var(--a-emerald);"></i>
+            <div class="online-title">Online Now</div>
+          </div>
           <div id="online-list">
-            <div class="skeleton" style="height:30px;margin-bottom:6px"></div>
-            <div class="skeleton" style="height:30px;margin-bottom:6px"></div>
-            <div class="skeleton" style="height:30px;margin-bottom:6px"></div>
+            <div class="skeleton" style="height:30px;margin:6px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:30px;margin:6px 16px;border-radius:8px;"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ═══ REPORTS ═══ -->
   <div class="page-body" id="view-reports">
-    <div class="welcome-row">
-      <div class="welcome-text"><h1>Study <em>Reports</em></h1><p>Detailed breakdown of your learning performance.</p></div>
-      <button class="post-btn" onclick="openSessionModal()" style="margin-bottom:4px;"><i class="fa-solid fa-plus" style="margin-right:6px;"></i>Log Session</button>
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Study <em>Reports</em></h1>
+        <div class="page-header-sub">Detailed breakdown of your learning performance</div>
+      </div>
+      <button class="post-btn" onclick="openSessionModal()">
+        <i class="fa-solid fa-plus" style="margin-right:6px;"></i>Log Session
+      </button>
     </div>
     <div class="stats-grid">
-      <div class="stat-card c-blue"><div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div><div class="stat-val" id="report-sessions">0</div><div class="stat-label">Sessions this month</div></div>
-      <div class="stat-card c-green"><div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-val" id="report-total">0h</div><div class="stat-label">Total study time</div></div>
-      <div class="stat-card c-purple"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-val" id="report-goal">0%</div><div class="stat-label">Goal completion</div></div>
-      <div class="stat-card c-amber"><div class="stat-icon"><i class="fa-solid fa-trophy"></i></div><div class="stat-val" id="report-best">—</div><div class="stat-label">Best day</div></div>
+      <div class="stat-card c-blue">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="stat-val" id="report-sessions">0</div>
+        <div class="stat-label">Sessions this month</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="stat-val" id="report-total">0h</div>
+        <div class="stat-label">Total study time</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-val" id="report-goal">0%</div>
+        <div class="stat-label">Goal completion</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+        <div class="stat-val" id="report-best">—</div>
+        <div class="stat-label">Best day</div>
+      </div>
     </div>
-    <div class="two-col">
+    <div class="grid-2">
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Monthly Overview</div><div class="card-subtitle">Study hours per week</div></div></div>
+        <div class="card-header">
+          <div>
+            <div class="card-title">Monthly Overview</div>
+            <div class="card-subtitle">Study hours per week</div>
+          </div>
+        </div>
         <div class="activity-chart" style="height:120px;" id="report-monthly-chart">
-          <div class="act-col" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;"><div class="act-bar-wrap" style="flex:1;width:100%;display:flex;align-items:flex-end;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;min-height:80px;"><div class="act-bar empty" style="width:100%;border-radius:4px;background:rgba(255,255,255,0.18);height:16px;"></div></div><div class="act-day" style="font-size:10px;color:rgba(255,255,255,0.45);">W1</div></div>
-          <div class="act-col" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;"><div class="act-bar-wrap" style="flex:1;width:100%;display:flex;align-items:flex-end;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;min-height:80px;"><div class="act-bar empty" style="width:100%;border-radius:4px;background:rgba(255,255,255,0.18);height:16px;"></div></div><div class="act-day" style="font-size:10px;color:rgba(255,255,255,0.45);">W2</div></div>
-          <div class="act-col" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;"><div class="act-bar-wrap" style="flex:1;width:100%;display:flex;align-items:flex-end;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;min-height:80px;"><div class="act-bar empty" style="width:100%;border-radius:4px;background:rgba(255,255,255,0.18);height:16px;"></div></div><div class="act-day" style="font-size:10px;color:rgba(255,255,255,0.45);">W3</div></div>
-          <div class="act-col" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;"><div class="act-bar-wrap" style="flex:1;width:100%;display:flex;align-items:flex-end;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;min-height:80px;"><div class="act-bar empty" style="width:100%;border-radius:4px;background:rgba(255,255,255,0.18);height:16px;"></div></div><div class="act-day" style="font-size:10px;color:rgba(255,255,255,0.45);">W4</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty"></div></div><div class="act-day">W1</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty"></div></div><div class="act-day">W2</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty"></div></div><div class="act-day">W3</div></div>
+          <div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty"></div></div><div class="act-day">W4</div></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Subject Breakdown</div><div class="card-subtitle">Time per subject</div></div></div>
+        <div class="card-header">
+          <div>
+            <div class="card-title">Subject Breakdown</div>
+            <div class="card-subtitle">Time per subject</div>
+          </div>
+        </div>
         <div id="subject-breakdown">
-          <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying to see your breakdown</div></div>
+          <div class="empty-state" style="padding:2rem 0">
+            <i class="fa-solid fa-chart-pie empty-icon-fa"></i>
+            <div>No data yet</div>
+            <div class="empty-sub">Add subjects and start studying</div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:1.75rem;">
+    <div class="card" style="margin-bottom:2rem;">
       <div class="card-header">
-        <div><div class="card-title">Study Log</div><div class="card-subtitle">All your sessions in one place</div></div>
+        <div>
+          <div class="card-title">Study Log</div>
+          <div class="card-subtitle">All your sessions in one place</div>
+        </div>
         <a class="card-action" href="#" onclick="openSessionModal();return false;">+ Log Session</a>
       </div>
       <div id="study-log-reports">
-        <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Start logging your study sessions to track progress</div></div>
+        <div class="empty-state" style="padding:2rem 0">
+          <i class="fa-solid fa-clipboard-list empty-icon-fa"></i>
+          <div>No sessions recorded yet</div>
+          <div class="empty-sub">Start logging your study sessions to track progress</div>
+        </div>
       </div>
     </div>
   </div>
-<div class="page-body" id="view-statistics">
-    <div class="welcome-row">
-      <div class="welcome-text"><h1>Your <em>Statistics</em></h1><p>Deep dive into your learning patterns and performance.</p></div>
+
+  <!-- ═══ STATISTICS ═══ -->
+  <div class="page-body" id="view-statistics">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Your <em>Statistics</em></h1>
+        <div class="page-header-sub">Deep dive into your learning patterns and performance</div>
+      </div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card c-blue"><div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div><div class="stat-val" id="stat-reviewed">0</div><div class="stat-label">Cards reviewed</div></div>
-      <div class="stat-card c-green"><div class="stat-icon"><i class="fa-solid fa-lightbulb"></i></div><div class="stat-val" id="stat-accuracy">0%</div><div class="stat-label">Accuracy rate</div></div>
-      <div class="stat-card c-purple"><div class="stat-icon"><i class="fa-solid fa-bolt"></i></div><div class="stat-val" id="stat-quizzes">0</div><div class="stat-label">Quizzes taken</div></div>
-      <div class="stat-card c-amber"><div class="stat-icon"><i class="fa-solid fa-medal"></i></div><div class="stat-val" id="stat-achievements">0</div><div class="stat-label">Achievements</div></div>
+      <div class="stat-card c-blue">
+        <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="stat-val" id="stat-reviewed">0</div>
+        <div class="stat-label">Cards reviewed</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon"><i class="fa-solid fa-lightbulb"></i></div>
+        <div class="stat-val" id="stat-accuracy">0%</div>
+        <div class="stat-label">Accuracy rate</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="stat-val" id="stat-quizzes">0</div>
+        <div class="stat-label">Quizzes taken</div>
+      </div>
+      <div class="stat-card c-amber">
+        <div class="stat-icon"><i class="fa-solid fa-medal"></i></div>
+        <div class="stat-val" id="stat-achievements">0</div>
+        <div class="stat-label">Achievements</div>
+      </div>
     </div>
-    <div class="three-col">
+    <div class="grid-3">
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Streak History</div><div class="card-subtitle">Last 30 days</div></div></div>
-        <div id="heatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:0.5rem;min-height:120px;"></div>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:11px;color:var(--text-dim);">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Streak History</div>
+            <div class="card-subtitle">Last 30 days</div>
+          </div>
+        </div>
+        <div id="heatmap"></div>
+        <div style="display:flex;gap:8px;align-items:center;padding:0 20px 14px;font-size:11px;color:var(--txt-muted);">
           <span>Less</span>
-          <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-card-2);border:1px solid var(--border)"></div>
-          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.2)"></div>
-          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.5)"></div>
-          <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.85)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid var(--border)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.2)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.5)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.85)"></div>
           <span>More</span>
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Peak Study Hours</div><div class="card-subtitle">When you study most</div></div></div>
+        <div class="card-header">
+          <div>
+            <div class="card-title">Peak Study Hours</div>
+            <div class="card-subtitle">When you study most</div>
+          </div>
+        </div>
         <div class="activity-chart" style="height:110px;" id="peak-hours-chart"></div>
       </div>
       <div class="card">
-        <div class="card-header"><div><div class="card-title">Performance</div><div class="card-subtitle">Key learning metrics</div></div></div>
+        <div class="card-header">
+          <div>
+            <div class="card-title">Performance</div>
+            <div class="card-subtitle">Key learning metrics</div>
+          </div>
+        </div>
         <div>
-          <div class="mini-stat-row"><span class="mini-stat-label">Avg. session length</span><span class="mini-stat-val" id="perf-avg">— min</span></div>
+          <div class="mini-stat-row"><span class="mini-stat-label">Avg. session</span><span class="mini-stat-val" id="perf-avg">— min</span></div>
           <div class="mini-stat-row"><span class="mini-stat-label">Total sessions</span><span class="mini-stat-val" id="perf-total">0</span></div>
           <div class="mini-stat-row"><span class="mini-stat-label">Longest streak</span><span class="mini-stat-val" id="perf-streak">1 day</span></div>
           <div class="mini-stat-row"><span class="mini-stat-label">Retention rate</span><span class="mini-stat-val" id="perf-retention">—</span></div>
@@ -455,24 +585,36 @@
       </div>
     </div>
   </div>
-</div>
 
+</div><!-- /main-wrap -->
+
+<!-- ─────────────────────────────────────────────
+     MODALS
+───────────────────────────────────────────── -->
+
+<!-- Add Subject -->
 <div class="modal-overlay" id="subject-modal">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title">Add Subject</div><button class="modal-close" onclick="closeModal('subject-modal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-book-open" style="color:var(--a-violet);margin-right:8px;"></i>Add Subject
+      </div>
+      <button class="modal-close" onclick="closeModal('subject-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:16px;">
+      <div class="form-group">
         <label class="form-label">Subject Name</label>
-        <input type="text" class="form-input" id="subject-name-input" placeholder="e.g. Calculus">
+        <input type="text" class="form-input" id="subject-name-input" placeholder="e.g. Calculus"
+               onkeydown="if(event.key==='Enter') submitSubject()">
       </div>
       <div class="form-group">
         <label class="form-label">Color</label>
         <div class="color-picker" id="subject-colors">
-          <div class="color-option selected" style="background:#3b9eff" data-color="#3b9eff"></div>
-          <div class="color-option" style="background:#818cf8" data-color="#818cf8"></div>
+          <div class="color-option selected" style="background:#8b7cf8" data-color="#8b7cf8"></div>
+          <div class="color-option" style="background:#6366f1" data-color="#6366f1"></div>
           <div class="color-option" style="background:#34d399" data-color="#34d399"></div>
           <div class="color-option" style="background:#fbbf24" data-color="#fbbf24"></div>
-          <div class="color-option" style="background:#fb7185" data-color="#fb7185"></div>
+          <div class="color-option" style="background:#f87171" data-color="#f87171"></div>
           <div class="color-option" style="background:#a78bfa" data-color="#a78bfa"></div>
           <div class="color-option" style="background:#22d3ee" data-color="#22d3ee"></div>
           <div class="color-option" style="background:#f472b6" data-color="#f472b6"></div>
@@ -481,19 +623,28 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('subject-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitSubject()">Add Subject</button>
+      <button class="btn btn-primary" id="subject-submit-btn" onclick="submitSubject()">Add Subject</button>
     </div>
   </div>
 </div>
 
+<!-- Focus Timer -->
 <div class="modal-overlay" id="timer-modal">
   <div class="modal" style="max-width:400px;">
-    <div class="modal-header"><div class="modal-title">Focus Timer</div><button class="modal-close" onclick="closeModal('timer-modal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-stopwatch" style="color:var(--a-violet);margin-right:8px;"></i>Focus Timer</div>
+      <button class="modal-close" onclick="closeModal('timer-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="modal-body">
       <div class="timer-display">
         <div class="timer-circle">
           <svg width="160" height="160" viewBox="0 0 160 160">
-            <defs><linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b9eff"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs>
+            <defs>
+              <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#8b7cf8"/>
+                <stop offset="100%" stop-color="#22d3ee"/>
+              </linearGradient>
+            </defs>
             <circle class="timer-bg" cx="80" cy="80" r="70"/>
             <circle class="timer-progress" cx="80" cy="80" r="70" id="timer-progress-circle"/>
           </svg>
@@ -501,9 +652,15 @@
         </div>
         <div class="timer-label" id="timer-status">Ready to focus?</div>
         <div class="timer-controls">
-          <button class="timer-btn timer-btn-secondary" onclick="resetTimer()" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
-          <button class="timer-btn timer-btn-play" id="timer-play-btn" onclick="toggleTimer()"><i class="fa-solid fa-play" id="timer-play-icon"></i></button>
-          <button class="timer-btn timer-btn-secondary" onclick="saveSessionFromTimer()" title="Save Session"><i class="fa-solid fa-check"></i></button>
+          <button class="timer-btn timer-btn-secondary" onclick="resetTimer()" title="Reset">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          <button class="timer-btn timer-btn-play" id="timer-play-btn" onclick="toggleTimer()">
+            <i class="fa-solid fa-play" id="timer-play-icon"></i>
+          </button>
+          <button class="timer-btn timer-btn-secondary" onclick="saveSessionFromTimer()" title="Save Session">
+            <i class="fa-solid fa-check"></i>
+          </button>
         </div>
         <div class="timer-presets">
           <button class="timer-preset active" data-min="25" onclick="setTimerPreset(25)">25 min</button>
@@ -519,40 +676,52 @@
   </div>
 </div>
 
+<!-- Flashcards -->
 <div class="modal-overlay" id="flashcard-modal">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="flashcard-modal-title">New Flashcard</div><button class="modal-close" onclick="closeModal('flashcard-modal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-header">
+      <div class="modal-title" id="flashcard-modal-title">
+        <i class="fa-solid fa-layer-group" style="color:var(--a-indigo);margin-right:8px;"></i>New Flashcard
+      </div>
+      <button class="modal-close" onclick="closeModal('flashcard-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-group">
         <label class="form-label">Front (Question)</label>
-        <input type="text" class="form-input" id="flashcard-front" placeholder="What is the capital of France?">
+        <input type="text" class="form-input" id="flashcard-front" placeholder="What is the capital of France?"
+               onkeydown="if(event.key==='Enter') document.getElementById('flashcard-back').focus()">
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-group">
         <label class="form-label">Back (Answer)</label>
-        <input type="text" class="form-input" id="flashcard-back" placeholder="Paris">
+        <input type="text" class="form-input" id="flashcard-back" placeholder="Paris"
+               onkeydown="if(event.key==='Enter') submitFlashcard()">
       </div>
-      <div class="form-group" style="margin-bottom:16px;">
+      <div class="form-group">
         <label class="form-label">Subject (optional)</label>
         <select class="form-select" id="flashcard-subject"><option value="">No subject</option></select>
       </div>
       <div id="flashcard-list-section" style="display:none;">
-        <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Your Flashcards</div>
-        <div id="flashcard-list" style="max-height:200px;overflow-y:auto;"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Recent Flashcards</div>
+        <div id="flashcard-list" style="max-height:180px;overflow-y:auto;"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('flashcard-modal')">Close</button>
-      <button class="btn btn-primary" onclick="submitFlashcard()">Create Flashcard</button>
+      <button class="btn btn-primary" id="flashcard-submit-btn" onclick="submitFlashcard()">Create Flashcard</button>
     </div>
   </div>
 </div>
 
+<!-- Quick Notes -->
 <div class="modal-overlay" id="notes-modal">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-header"><div class="modal-title">Quick Notes</div><button class="modal-close" onclick="closeModal('notes-modal')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-pen-to-square" style="color:var(--a-emerald);margin-right:8px;"></i>Quick Notes</div>
+      <button class="modal-close" onclick="closeModal('notes-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="modal-body">
-      <textarea class="notes-area" id="quick-notes" placeholder="Jot down your thoughts, ideas, or study notes here..."></textarea>
-      <div style="margin-top:12px;font-size:12px;color:var(--text-dim);text-align:right;" id="notes-char-count">0 characters</div>
+      <textarea class="notes-area" id="quick-notes" placeholder="Jot down your thoughts, ideas, or study notes here…"></textarea>
+      <div style="margin-top:8px;font-size:12px;color:var(--txt-muted);text-align:right;" id="notes-char-count">0 characters</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('notes-modal')">Close</button>
@@ -561,15 +730,19 @@
   </div>
 </div>
 
+<!-- Log Session -->
 <div class="modal-overlay" id="session-modal">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-header"><div class="modal-title">Log Study Session</div><button class="modal-close" onclick="closeModal('session-modal')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-clock" style="color:var(--a-cyan);margin-right:8px;"></i>Log Study Session</div>
+      <button class="modal-close" onclick="closeModal('session-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-group">
         <label class="form-label">Duration (minutes)</label>
         <input type="number" class="form-input" id="session-duration" value="30" min="1" max="480">
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-group">
         <label class="form-label">Subject (optional)</label>
         <select class="form-select" id="session-subject"><option value="">No subject</option></select>
       </div>
@@ -585,8 +758,11 @@
   </div>
 </div>
 
+<!-- ─────────────────────────────────────────────
+     JAVASCRIPT
+───────────────────────────────────────────── -->
 <script>
-(function() {
+(function () {
   'use strict';
 
   var currentUser = {
@@ -599,223 +775,212 @@
     initials: "{{ user.first_name[0] }}{{ user.last_name[0] }}"
   };
 
-  /* Toast */
-  function showToast(message, type) {
+  /* ── HELPERS ── */
+  function escapeHtml(t) {
+    if (!t) return '';
+    var d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+  }
+
+  function formatTimeAgo(ds) {
+    var d = new Date(ds), now = new Date(), diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg, type) {
     type = type || 'info';
-    var container = document.getElementById('toast-container');
-    var toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info';
-    var color = type === 'success' ? 'var(--accent-green)' : type === 'error' ? 'var(--accent-rose)' : 'var(--accent)';
-    toast.innerHTML = '<i class="fa-solid ' + icon + '" style="color:' + color + '"></i><span>' + message + '</span>';
-    container.appendChild(toast);
-    setTimeout(function() { toast.style.opacity = '0'; toast.style.transform = 'translateX(30px)'; }, 3000);
-    setTimeout(function() { toast.remove(); }, 3400);
+    var c = document.getElementById('toast-container');
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    var icons = { success: 'fa-check-circle', error: 'fa-circle-exclamation', info: 'fa-circle-info' };
+    var colors = { success: 'var(--a-emerald)', error: 'var(--a-rose)', info: 'var(--a-cyan)' };
+    t.style.borderLeftColor = colors[type] || 'var(--a-violet)';
+    t.innerHTML = '<i class="fa-solid ' + (icons[type] || icons.info) + '" style="color:' + (colors[type] || 'var(--a-violet)') + ';flex-shrink:0;"></i><span>' + msg + '</span>';
+    c.appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translateX(24px)'; t.style.transition = '0.3s'; }, 3000);
+    setTimeout(function () { t.remove(); }, 3400);
   }
   window.showToast = showToast;
 
-  /* Navigation */
+  /* ── THEME TOGGLE ── */
+  var isDark = true;
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  });
+
+  /* ── DATE ── */
+  var dateEl = document.getElementById('today-date');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
+
+  /* ── NAVIGATION ── */
   var views = {
     dashboard:  { el: 'view-dashboard',  title: 'Dashboard',   sub: 'Overview of your study activity' },
-    feed:       { el: 'view-feed',       title: 'News Feed',   sub: 'Connect, share, and learn' },
-    reports:    { el: 'view-reports',    title: 'Reports',      sub: 'Detailed performance breakdown' },
-    statistics: { el: 'view-statistics', title: 'Statistics',   sub: 'Deep dive into your learning patterns' }
+    feed:       { el: 'view-feed',       title: 'Community',   sub: 'Connect, share, and learn' },
+    reports:    { el: 'view-reports',    title: 'Reports',     sub: 'Detailed performance breakdown' },
+    statistics: { el: 'view-statistics', title: 'Statistics',  sub: 'Deep dive into your learning patterns' }
   };
 
   function switchView(key) {
     var view = views[key];
     if (!view) return;
-    Object.values(views).forEach(function(v) {
-      var el = document.getElementById(v.el);
+    Object.keys(views).forEach(function (k) {
+      var el = document.getElementById(views[k].el);
       if (el) { el.classList.remove('active'); el.style.display = 'none'; }
     });
     var target = document.getElementById(view.el);
-    if (target) { target.style.display = 'block'; target.classList.add('active'); void target.offsetWidth; }
-    document.getElementById('page-title').textContent = view.title;
-    document.getElementById('page-subtitle').textContent = view.sub;
-    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-    document.querySelectorAll('.nav-item[data-view="' + key + '"]').forEach(function(n) { n.classList.add('active'); });
-    if (key === 'feed') loadPosts();
-    if (key === 'reports') loadReportsData();
+    if (target) { target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }
+    document.querySelectorAll('.nav-link[data-view]').forEach(function (n) { n.classList.remove('active'); });
+    document.querySelectorAll('.nav-link[data-view="' + key + '"]').forEach(function (n) { n.classList.add('active'); });
+    // Close mobile drawer
+    document.getElementById('mobile-drawer').classList.remove('open');
+    if (key === 'feed')       { loadPosts(); loadLeaderboard(); loadOnlineUsers(); }
+    if (key === 'reports')    loadReportsData();
     if (key === 'statistics') loadStatisticsData();
   }
   window.switchView = switchView;
 
-  document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
-    item.addEventListener('click', function(e) {
+  document.querySelectorAll('.nav-link[data-view]').forEach(function (item) {
+    item.addEventListener('click', function (e) {
       e.preventDefault();
       switchView(item.dataset.view);
-      if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebar-overlay').classList.remove('open');
-      }
     });
   });
 
-  /* Mobile Toggle */
-  document.getElementById('mobile-toggle').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebar-overlay').classList.toggle('open');
-  });
-  document.getElementById('sidebar-overlay').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('open');
+  /* Mobile hamburger */
+  document.getElementById('nav-hamburger').addEventListener('click', function () {
+    var drawer = document.getElementById('mobile-drawer');
+    drawer.classList.toggle('open');
   });
 
-  /* Logout */
-  document.getElementById('logout-btn').addEventListener('click', async function() {
+  /* ── LOGOUT ── */
+  document.getElementById('logout-btn').addEventListener('click', async function () {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/';
   });
 
-  /* Today's date */
-  var dateEl = document.getElementById('today-date');
-  if (dateEl) {
-    dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
-  }
-
-  /* Stats */
+  /* ── DASHBOARD STATS ── */
   function loadDashboardStats() {
-    fetch('/api/stats').then(function(r) { return r.json(); }).then(function(data) {
+    fetch('/api/stats').then(function (r) { return r.json(); }).then(function (data) {
       var ms = document.getElementById('member-since');
-      if (ms && data.member_since) {
-        ms.textContent = new Date(data.member_since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      }
+      if (ms && data.member_since) ms.textContent = new Date(data.member_since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       document.getElementById('stat-posts').textContent = data.posts || 0;
       document.getElementById('stat-likes').textContent = data.likes || 0;
-      document.getElementById('dash-subjects').textContent = data.subjects || 0;
+      document.getElementById('dash-subjects').textContent   = data.subjects || 0;
       document.getElementById('dash-flashcards').textContent = data.flashcards || 0;
-      document.getElementById('dash-hours').textContent = (data.study_hours || 0) + 'h';
-      document.getElementById('dash-streak').textContent = data.streak || 1;
-      document.getElementById('streak-num').textContent = data.streak || 1;
+      document.getElementById('dash-hours').textContent      = (data.study_hours || 0) + 'h';
+      document.getElementById('dash-streak').textContent     = data.streak || 1;
+      document.getElementById('streak-num').textContent      = data.streak || 1;
       document.getElementById('nav-subject-count').textContent = data.subjects || 0;
 
-      var dSub = document.getElementById('delta-subjects');
-      if (dSub) dSub.textContent = (data.subjects || 0) > 0 ? 'Active' : 'New';
-      var dFlash = document.getElementById('delta-flashcards');
-      if (dFlash) dFlash.textContent = (data.flashcards || 0) > 0 ? 'Active' : 'New';
-      var dHours = document.getElementById('delta-hours');
-      if (dHours) dHours.textContent = (data.study_hours || 0) > 0 ? 'This week' : 'New';
+      var dSub = document.getElementById('delta-subjects'); if (dSub) dSub.textContent = (data.subjects || 0) > 0 ? 'Active' : 'New';
+      var dFC  = document.getElementById('delta-flashcards'); if (dFC) dFC.textContent = (data.flashcards || 0) > 0 ? 'Active' : 'New';
+      var dH   = document.getElementById('delta-hours'); if (dH) dH.textContent = (data.study_hours || 0) > 0 ? 'This week' : 'New';
 
       var pct = Math.min(100, Math.round(((data.weekly_done || 0) / 10) * 100));
-      document.getElementById('goal-pct').textContent = pct + '%';
+      document.getElementById('goal-pct').textContent   = pct + '%';
       document.getElementById('goal-title').textContent = (data.weekly_done || 0) + ' / 10 hrs studied';
-      document.getElementById('goal-bar').style.width = pct + '%';
-      var ringFill = document.getElementById('ring-fill');
-      if (ringFill) {
-        var circumference = 2 * Math.PI * 45;
-        ringFill.style.strokeDasharray = circumference;
-        ringFill.style.strokeDashoffset = circumference * (1 - pct / 100);
+      document.getElementById('goal-bar').style.width   = pct + '%';
+      var rf = document.getElementById('ring-fill');
+      if (rf) {
+        var circ = 2 * Math.PI * 45;
+        rf.style.strokeDasharray  = circ;
+        rf.style.strokeDashoffset = circ * (1 - pct / 100);
       }
-      var goalSub = document.getElementById('goal-sub');
-      if (goalSub) {
-        if (pct >= 100) goalSub.textContent = 'Goal achieved! Great work!';
-        else if (pct >= 50) goalSub.textContent = 'Halfway there! Keep it up!';
-        else goalSub.textContent = 'Keep going — you can do this!';
-      }
-    }).catch(function() {});
+      var gs = document.getElementById('goal-sub');
+      if (gs) gs.textContent = pct >= 100 ? 'Goal achieved! Great work!' : pct >= 50 ? 'Halfway there! Keep it up!' : 'Keep going — you can do this!';
+    }).catch(function () {});
   }
 
-  /* Profile Avatar */
-  var profileAvatarContainer = document.getElementById('sidebar-profile-avatar');
-  if (profileAvatarContainer) {
-    if (currentUser.avatar) {
-      profileAvatarContainer.innerHTML = '<img src="' + currentUser.avatar + '" class="profile-card-avatar" alt="Avatar">';
-    } else {
-      profileAvatarContainer.innerHTML = '<div class="profile-card-initials">' + currentUser.initials + '</div>';
-    }
-  }
-
-  /* Weekly Activity Chart */
+  /* ── ACTIVITY CHART ── */
   function buildActivityChart() {
     var chart = document.getElementById('activity-chart');
     if (!chart) return;
-    fetch('/api/sessions/weekly').then(function(r) { return r.json(); }).then(function(data) {
-      var maxMin = Math.max.apply(null, data.map(function(d) { return d.minutes; })) || 1;
+    fetch('/api/sessions/weekly').then(function (r) { return r.json(); }).then(function (data) {
+      var maxMin   = Math.max.apply(null, data.map(function (d) { return d.minutes; })) || 1;
       var todayIdx = (new Date().getDay() + 6) % 7;
-      chart.innerHTML = data.map(function(d, i) {
+      chart.innerHTML = data.map(function (d, i) {
         var h = d.minutes > 0 ? Math.max(8, (d.minutes / maxMin) * 80) : 4;
-        var cls = d.minutes > 0 ? 'filled' : 'empty';
-        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + cls + '" style="height:' + h + '%"></div></div><div class="act-day ' + (i === todayIdx ? 'today' : '') + '">' + d.day + '</div></div>';
+        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + (d.minutes > 0 ? 'filled' : 'empty') + '" style="height:' + h + '%"></div></div><div class="act-day ' + (i === todayIdx ? 'today' : '') + '">' + d.day + '</div></div>';
       }).join('');
-    }).catch(function() {
+    }).catch(function () {
       var days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       var todayIdx = (new Date().getDay() + 6) % 7;
-      chart.innerHTML = days.map(function(d, i) {
-        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:4%"></div></div><div class="act-day ' + (i === todayIdx ? 'today' : '') + '">' + d + '</div></div>';
+      chart.innerHTML = days.map(function (d, i) {
+        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty"></div></div><div class="act-day ' + (i === todayIdx ? 'today' : '') + '">' + d + '</div></div>';
       }).join('');
     });
   }
 
-  /* Streak Days */
-  (function buildStreakDays() {
-    var todayIdx = (new Date().getDay() + 6) % 7;
+  /* ── STREAK DAYS ── */
+  (function () {
     var el = document.getElementById('streak-days');
     if (!el) return;
-    el.innerHTML = ['M','T','W','T','F','S','S'].map(function(d, i) {
+    var todayIdx = (new Date().getDay() + 6) % 7;
+    el.innerHTML = ['M','T','W','T','F','S','S'].map(function (d, i) {
       return '<div class="streak-day ' + (i === todayIdx ? 'today' : '') + '">' + d + '</div>';
     }).join('');
   })();
 
-  /* Heatmap */
+  /* ── HEATMAP ── */
   function buildHeatmap() {
     var el = document.getElementById('heatmap');
     if (!el) return;
-    fetch('/api/sessions/heatmap').then(function(r) { return r.json(); }).then(function(data) {
-      var cells = [];
-      for (var i = 29; i >= 0; i--) {
-        var d = new Date(); d.setDate(d.getDate() - i);
-        var key = d.toISOString().split('T')[0];
-        var mins = data[key] || 0;
-        var isToday = i === 0;
-        var baseStyle = 'width:100%;aspect-ratio:1;border-radius:3px;border:1.5px solid rgba(255,255,255,0.22);';
-        var bgStyle, borderStyle;
-        if (mins > 90) { bgStyle = 'background:rgba(59,158,255,0.85);border-color:rgba(59,158,255,1);'; }
-        else if (mins > 60) { bgStyle = 'background:rgba(59,158,255,0.6);border-color:rgba(59,158,255,0.75);'; }
-        else if (mins > 30) { bgStyle = 'background:rgba(59,158,255,0.4);border-color:rgba(59,158,255,0.55);'; }
-        else if (mins > 0) { bgStyle = 'background:rgba(59,158,255,0.2);border-color:rgba(59,158,255,0.35);'; }
-        else { bgStyle = 'background:rgba(255,255,255,0.05);'; }
-        if (isToday) { borderStyle = 'border-color:#3b9eff;box-shadow:0 0 0 1.5px #3b9eff;'; }
-        else { borderStyle = ''; }
-        cells.push('<div class="heatmap-cell" style="' + baseStyle + bgStyle + borderStyle + '" title="' + d.toDateString() + ': ' + mins + ' min"></div>');
-      }
-      var rem = 30 % 7;
-      if (rem) for (var p = 0; p < 7 - rem; p++) cells.unshift('<div style="width:100%;aspect-ratio:1;border-radius:3px;opacity:0"></div>');
-      el.innerHTML = cells.join('');
-    }).catch(function() {
-      var cells = [];
-      for (var i = 29; i >= 0; i--) {
-        var d = new Date(); d.setDate(d.getDate() - i);
-        var isToday = i === 0;
-        var style = 'width:100%;aspect-ratio:1;border-radius:3px;border:1.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.05);';
-        if (isToday) style += 'border-color:#3b9eff;box-shadow:0 0 0 1.5px #3b9eff;background:rgba(59,158,255,0.1);';
-        cells.push('<div class="heatmap-cell" style="' + style + '" title="' + d.toDateString() + '"></div>');
-      }
-      var rem = 30 % 7;
-      if (rem) for (var p = 0; p < 7 - rem; p++) cells.unshift('<div style="width:100%;aspect-ratio:1;border-radius:3px;opacity:0"></div>');
-      el.innerHTML = cells.join('');
-    });
+    fetch('/api/sessions/heatmap').then(function (r) { return r.json(); }).then(function (data) {
+      renderHeatmap(el, data);
+    }).catch(function () { renderHeatmap(el, {}); });
   }
 
-  /* Subjects */
-  var selectedSubjectColor = '#3b9eff';
+  function renderHeatmap(el, data) {
+    var cells = [];
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(); d.setDate(d.getDate() - i);
+      var key  = d.toISOString().split('T')[0];
+      var mins = data[key] || 0;
+      var isToday = i === 0;
+      var bg;
+      if      (mins > 90) bg = 'rgba(139,124,248,0.85)';
+      else if (mins > 60) bg = 'rgba(139,124,248,0.6)';
+      else if (mins > 30) bg = 'rgba(139,124,248,0.4)';
+      else if (mins > 0)  bg = 'rgba(139,124,248,0.2)';
+      else                bg = 'rgba(255,255,255,0.04)';
+      var border = isToday ? 'border:1.5px solid var(--a-violet);box-shadow:0 0 0 1.5px var(--a-violet);' : 'border:1px solid rgba(255,255,255,0.06);';
+      cells.push('<div class="heatmap-cell" style="background:' + bg + ';' + border + '" title="' + d.toDateString() + ': ' + mins + ' min"></div>');
+    }
+    var rem = 30 % 7;
+    if (rem) for (var p = 0; p < 7 - rem; p++) cells.unshift('<div style="aspect-ratio:1;opacity:0;"></div>');
+    el.innerHTML = cells.join('');
+  }
 
-  window.openSubjectModal = function() {
+  /* ── SUBJECTS ── */
+  var selectedSubjectColor = '#8b7cf8';
+
+  window.openSubjectModal = function () {
     document.getElementById('subject-modal').classList.add('active');
-    document.getElementById('subject-name-input').focus();
+    setTimeout(function () { document.getElementById('subject-name-input').focus(); }, 80);
   };
 
-  document.querySelectorAll('#subject-colors .color-option').forEach(function(opt) {
-    opt.addEventListener('click', function() {
-      document.querySelectorAll('#subject-colors .color-option').forEach(function(o) { o.classList.remove('selected'); });
+  document.querySelectorAll('#subject-colors .color-option').forEach(function (opt) {
+    opt.addEventListener('click', function () {
+      document.querySelectorAll('#subject-colors .color-option').forEach(function (o) { o.classList.remove('selected'); });
       opt.classList.add('selected');
       selectedSubjectColor = opt.dataset.color;
     });
   });
 
-  window.submitSubject = async function() {
-    var name = document.getElementById('subject-name-input').value.trim();
-    if (!name) { showToast('Please enter a subject name', 'error'); return; }
+  window.submitSubject = async function () {
+    var nameInput = document.getElementById('subject-name-input');
+    var btn = document.getElementById('subject-submit-btn');
+    var name = nameInput.value.trim();
+    if (!name) { showToast('Please enter a subject name', 'error'); nameInput.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Adding…';
     try {
       var res = await fetch('/api/subjects', {
         method: 'POST',
@@ -823,17 +988,22 @@
         body: JSON.stringify({ name: name, color: selectedSubjectColor })
       });
       if (res.ok) {
-        showToast('Subject added!', 'success');
-        document.getElementById('subject-name-input').value = '';
+        showToast('Subject "' + name + '" added!', 'success');
+        nameInput.value = '';
+        selectedSubjectColor = '#8b7cf8';
+        document.querySelectorAll('#subject-colors .color-option').forEach(function (o) { o.classList.remove('selected'); });
+        var first = document.querySelector('#subject-colors .color-option');
+        if (first) first.classList.add('selected');
         closeModal('subject-modal');
-        loadSubjects();
-        loadDashboardStats();
-        populateSubjectSelects();
+        loadSubjects(); loadDashboardStats(); populateSubjectSelects();
       } else {
-        showToast('Failed to add subject', 'error');
+        var e = {}; try { e = await res.json(); } catch (_) {}
+        showToast(e.message || e.error || 'Failed to add subject (status ' + res.status + ')', 'error');
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      showToast('Network error — please check your connection', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Subject';
     }
   };
 
@@ -842,122 +1012,90 @@
       var res = await fetch('/api/subjects');
       var subjects = await res.json();
       var list = document.getElementById('subject-list');
-      if (!subjects || subjects.length === 0) {
+      if (!subjects || !subjects.length) {
         list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-book-open empty-icon-fa"></i><div>No subjects yet</div><div class="empty-sub">Add your first subject to get started</div></div>';
         return;
       }
-      list.innerHTML = subjects.map(function(s) {
-        return '<div class="subject-item"><div class="subject-color-dot" style="background:' + s.color + '"></div><div class="subject-name">' + escapeHtml(s.name) + '</div><button class="subject-delete" onclick="deleteSubject(' + s.id + ')"><i class="fa-solid fa-trash"></i></button></div>';
+      list.innerHTML = subjects.map(function (s, i) {
+        return '<div class="subject-item" style="animation-delay:' + (i * 0.06) + 's"><div class="subject-color-dot" style="background:' + s.color + ';box-shadow:0 0 8px ' + s.color + '40;"></div><div class="subject-name">' + escapeHtml(s.name) + '</div><button class="subject-delete" onclick="deleteSubject(' + s.id + ')"><i class="fa-solid fa-trash"></i></button></div>';
       }).join('');
-    } catch (err) {}
+    } catch (_) {}
   }
 
-  window.deleteSubject = async function(id) {
+  window.deleteSubject = async function (id) {
     if (!confirm('Delete this subject?')) return;
     try {
-      await fetch('/api/subjects/' + id, { method: 'DELETE' });
-      showToast('Subject deleted', 'success');
-      loadSubjects();
-      loadDashboardStats();
-      populateSubjectSelects();
-    } catch (err) {
-      showToast('Failed to delete', 'error');
-    }
+      var res = await fetch('/api/subjects/' + id, { method: 'DELETE' });
+      if (res.ok) { showToast('Subject deleted', 'success'); }
+      else { showToast('Failed to delete subject', 'error'); return; }
+      loadSubjects(); loadDashboardStats(); populateSubjectSelects();
+    } catch (_) { showToast('Network error', 'error'); }
   };
 
   function populateSubjectSelects() {
-    fetch('/api/subjects').then(function(r) { return r.json(); }).then(function(subjects) {
-      var opts = '<option value="">No subject</option>' + subjects.map(function(s) {
+    fetch('/api/subjects').then(function (r) { return r.json(); }).then(function (subjects) {
+      var opts = '<option value="">No subject</option>' + subjects.map(function (s) {
         return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>';
       }).join('');
-      ['timer-subject', 'session-subject', 'flashcard-subject'].forEach(function(id) {
+      ['timer-subject', 'session-subject', 'flashcard-subject'].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.innerHTML = opts;
       });
-    }).catch(function() {});
+    }).catch(function () {});
   }
 
-  /* Study Sessions */
-  window.openSessionModal = function() {
+  /* ── SESSION ── */
+  window.openSessionModal = function () {
+    populateSubjectSelects();
     document.getElementById('session-modal').classList.add('active');
   };
 
-  window.submitSession = async function() {
-    var duration = parseInt(document.getElementById('session-duration').value) || 0;
-    var subjectId = document.getElementById('session-subject').value;
+  window.submitSession = async function () {
+    var dur = parseInt(document.getElementById('session-duration').value) || 0;
+    var sid = document.getElementById('session-subject').value;
     var notes = document.getElementById('session-notes').value.trim();
-    if (duration < 1) { showToast('Please enter a valid duration', 'error'); return; }
+    if (dur < 1) { showToast('Please enter a valid duration', 'error'); return; }
     try {
       var res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duration_minutes: duration, subject_id: subjectId || null, notes: notes })
+        body: JSON.stringify({ duration_minutes: dur, subject_id: sid || null, notes: notes })
       });
       if (res.ok) {
         showToast('Session logged!', 'success');
         document.getElementById('session-duration').value = '30';
         document.getElementById('session-notes').value = '';
         closeModal('session-modal');
-        loadDashboardStats();
-        buildActivityChart();
-        loadStudyLog();
+        loadDashboardStats(); buildActivityChart(); loadStudyLogForReports();
       } else {
-        showToast('Failed to log session', 'error');
+        var e = {}; try { e = await res.json(); } catch (_) {}
+        showToast(e.message || 'Failed to log session', 'error');
       }
-    } catch (err) {
-      showToast('Network error', 'error');
-    }
+    } catch (_) { showToast('Network error', 'error'); }
   };
 
-  async function loadStudyLog() {
-    try {
-      var res = await fetch('/api/sessions');
-      var sessions = await res.json();
-      var el = document.getElementById('study-log');
-      if (!sessions || sessions.length === 0) {
-        el.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Your study sessions will be logged here automatically</div></div>';
-        return;
-      }
-      el.innerHTML = '<div class="log-list">' + sessions.slice(0, 10).map(function(s) {
-        var color = s.subject_color || '#3b9eff';
-        var name = s.subject_name || 'General';
-        var date = new Date(s.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        var hours = Math.floor(s.duration_minutes / 60);
-        var mins = s.duration_minutes % 60;
-        var timeStr = hours > 0 ? hours + 'h ' + mins + 'm' : mins + ' min';
-        return '<div class="log-item"><div class="log-color" style="background:' + color + '"></div><div class="log-info"><div class="log-subject">' + escapeHtml(name) + '</div><div class="log-meta">' + date + (s.notes ? ' — ' + escapeHtml(s.notes.substring(0, 40)) : '') + '</div></div><div class="log-duration">' + timeStr + '</div></div>';
-      }).join('') + '</div>';
-    } catch (err) {}
-  }
+  /* ── TIMER ── */
+  var timerInterval = null, timerSeconds = 25 * 60, timerTotal = 25 * 60, timerRunning = false;
 
-  /* Pomodoro Timer */
-  var timerInterval = null;
-  var timerSeconds = 25 * 60;
-  var timerTotal = 25 * 60;
-  var timerRunning = false;
-
-  window.openTimerModal = function() {
-    document.getElementById('timer-modal').classList.add('active');
+  window.openTimerModal = function () {
     populateSubjectSelects();
+    document.getElementById('timer-modal').classList.add('active');
   };
 
-  window.toggleTimer = function() {
+  window.toggleTimer = function () {
     if (timerRunning) {
-      clearInterval(timerInterval);
-      timerRunning = false;
+      clearInterval(timerInterval); timerRunning = false;
       document.getElementById('timer-play-icon').className = 'fa-solid fa-play';
       document.getElementById('timer-status').textContent = 'Paused';
     } else {
       timerRunning = true;
       document.getElementById('timer-play-icon').className = 'fa-solid fa-pause';
-      document.getElementById('timer-status').textContent = 'Focusing...';
-      timerInterval = setInterval(function() {
+      document.getElementById('timer-status').textContent = 'Focusing…';
+      timerInterval = setInterval(function () {
         if (timerSeconds > 0) {
-          timerSeconds--;
-          updateTimerDisplay();
+          timerSeconds--; updateTimerDisplay();
         } else {
-          clearInterval(timerInterval);
-          timerRunning = false;
+          clearInterval(timerInterval); timerRunning = false;
           document.getElementById('timer-play-icon').className = 'fa-solid fa-play';
           document.getElementById('timer-status').textContent = 'Session complete!';
           showToast('Focus session complete!', 'success');
@@ -968,87 +1106,80 @@
   };
 
   function updateTimerDisplay() {
-    var m = Math.floor(timerSeconds / 60);
-    var s = timerSeconds % 60;
+    var m = Math.floor(timerSeconds / 60), s = timerSeconds % 60;
     document.getElementById('timer-display').textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-    var circumference = 2 * Math.PI * 70;
-    var offset = circumference * (1 - timerSeconds / timerTotal);
-    document.getElementById('timer-progress-circle').style.strokeDashoffset = offset;
+    var circ = 2 * Math.PI * 70;
+    document.getElementById('timer-progress-circle').style.strokeDashoffset = circ * (1 - timerSeconds / timerTotal);
   }
 
-  window.resetTimer = function() {
-    clearInterval(timerInterval);
-    timerRunning = false;
-    timerTotal = 25 * 60;
-    timerSeconds = timerTotal;
+  window.resetTimer = function () {
+    clearInterval(timerInterval); timerRunning = false;
+    timerTotal = 25 * 60; timerSeconds = timerTotal;
     document.getElementById('timer-play-icon').className = 'fa-solid fa-play';
     document.getElementById('timer-status').textContent = 'Ready to focus?';
-    document.querySelectorAll('.timer-preset').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.timer-preset').forEach(function (p) { p.classList.remove('active'); });
     document.querySelector('.timer-preset[data-min="25"]').classList.add('active');
     updateTimerDisplay();
   };
 
-  window.setTimerPreset = function(minutes) {
-    clearInterval(timerInterval);
-    timerRunning = false;
-    timerTotal = minutes * 60;
-    timerSeconds = timerTotal;
+  window.setTimerPreset = function (minutes) {
+    clearInterval(timerInterval); timerRunning = false;
+    timerTotal = minutes * 60; timerSeconds = timerTotal;
     document.getElementById('timer-play-icon').className = 'fa-solid fa-play';
     document.getElementById('timer-status').textContent = 'Ready to focus?';
-    document.querySelectorAll('.timer-preset').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.timer-preset').forEach(function (p) { p.classList.remove('active'); });
     document.querySelector('.timer-preset[data-min="' + minutes + '"]').classList.add('active');
     updateTimerDisplay();
   };
 
-  window.saveSessionFromTimer = async function() {
+  window.saveSessionFromTimer = async function () {
     var elapsed = timerTotal - timerSeconds;
     if (elapsed < 60) { showToast('Study for at least 1 minute to save', 'info'); return; }
-    var subjectId = document.getElementById('timer-subject').value;
+    var sid = document.getElementById('timer-subject').value;
     try {
       await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duration_minutes: Math.round(elapsed / 60), subject_id: subjectId || null, notes: 'Focus timer session' })
+        body: JSON.stringify({ duration_minutes: Math.round(elapsed / 60), subject_id: sid || null, notes: 'Focus timer session' })
       });
       showToast('Session saved!', 'success');
-      loadDashboardStats();
-      buildActivityChart();
-      loadStudyLog();
-    } catch (err) {
-      showToast('Failed to save session', 'error');
-    }
+      loadDashboardStats(); buildActivityChart(); loadStudyLogForReports();
+    } catch (_) { showToast('Failed to save session', 'error'); }
   };
 
-  /* Flashcards */
-  window.openFlashcardModal = function() {
+  /* ── FLASHCARDS ── */
+  window.openFlashcardModal = function () {
     document.getElementById('flashcard-modal').classList.add('active');
-    document.getElementById('flashcard-modal-title').textContent = 'New Flashcard';
-    populateSubjectSelects();
-    loadFlashcardList();
+    populateSubjectSelects(); loadFlashcardList();
+    setTimeout(function () { document.getElementById('flashcard-front').focus(); }, 80);
   };
 
-  window.submitFlashcard = async function() {
-    var front = document.getElementById('flashcard-front').value.trim();
-    var back = document.getElementById('flashcard-back').value.trim();
-    var subjectId = document.getElementById('flashcard-subject').value;
-    if (!front || !back) { showToast('Please fill in both sides', 'error'); return; }
+  window.submitFlashcard = async function () {
+    var fi = document.getElementById('flashcard-front');
+    var bi = document.getElementById('flashcard-back');
+    var btn = document.getElementById('flashcard-submit-btn');
+    var front = fi.value.trim(), back = bi.value.trim();
+    var sid = document.getElementById('flashcard-subject').value;
+    if (!front || !back) { showToast('Please fill in both the question and answer', 'error'); if (!front) fi.focus(); else bi.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Creating…';
     try {
       var res = await fetch('/api/flashcards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ front: front, back: back, subject_id: subjectId || null })
+        body: JSON.stringify({ front: front, back: back, subject_id: sid || null })
       });
       if (res.ok) {
         showToast('Flashcard created!', 'success');
-        document.getElementById('flashcard-front').value = '';
-        document.getElementById('flashcard-back').value = '';
-        loadFlashcardList();
-        loadDashboardStats();
+        fi.value = ''; bi.value = ''; fi.focus();
+        loadFlashcardList(); loadDashboardStats();
       } else {
-        showToast('Failed to create flashcard', 'error');
+        var e = {}; try { e = await res.json(); } catch (_) {}
+        showToast(e.message || 'Failed to create flashcard (status ' + res.status + ')', 'error');
       }
-    } catch (err) {
-      showToast('Network error', 'error');
+    } catch (_) {
+      showToast('Network error — please check your connection', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Flashcard';
     }
   };
 
@@ -1058,149 +1189,220 @@
       var cards = await res.json();
       var section = document.getElementById('flashcard-list-section');
       var list = document.getElementById('flashcard-list');
-      if (cards && cards.length > 0) {
+      if (cards && cards.length) {
         section.style.display = 'block';
-        list.innerHTML = cards.slice(0, 5).map(function(c) {
+        list.innerHTML = cards.slice(0, 5).map(function (c) {
           return '<div class="mini-stat-row" style="padding:8px 0;"><span class="mini-stat-label">' + escapeHtml(c.front.substring(0, 30)) + '</span><span class="mini-stat-val" style="font-size:11px;">' + (c.review_count || 0) + ' reviews</span></div>';
         }).join('');
       } else {
         section.style.display = 'none';
       }
-    } catch (err) {}
+    } catch (_) {}
   }
 
-  /* Notes */
-  window.openNotesModal = function() {
+  /* ── NOTES ── */
+  window.openNotesModal = function () {
     document.getElementById('notes-modal').classList.add('active');
-    document.getElementById('quick-notes').focus();
+    setTimeout(function () { document.getElementById('quick-notes').focus(); }, 80);
   };
 
-  document.getElementById('quick-notes').addEventListener('input', function() {
+  document.getElementById('quick-notes').addEventListener('input', function () {
     document.getElementById('notes-char-count').textContent = this.value.length + ' characters';
   });
 
-  window.saveNotes = function() {
+  window.saveNotes = function () {
     var text = document.getElementById('quick-notes').value;
     if (!text.trim()) { showToast('Write something first!', 'info'); return; }
-    var blob = new Blob([text], { type: 'text/plain' });
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
     a.download = 'study-notes-' + new Date().toISOString().split('T')[0] + '.txt';
     a.click();
     showToast('Notes downloaded!', 'success');
   };
 
-  /* Feed / Community */
-  var currentFilter = 'all';
-  var currentTopic = '';
-  var postsData = [];
+  /* ── SEARCH ── */
+  var searchOverlay = document.getElementById('search-overlay');
+  var searchInput   = document.getElementById('search-input');
+  var searchResults = document.getElementById('search-results');
 
-  function formatTimeAgo(dateStr) {
-    var date = new Date(dateStr);
-    var now = new Date();
-    var diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  document.getElementById('search-btn').addEventListener('click', function () {
+    searchOverlay.classList.add('active');
+    setTimeout(function () { searchInput.focus(); }, 80);
+  });
+  document.getElementById('search-close').addEventListener('click', function () {
+    searchOverlay.classList.remove('active');
+    searchInput.value = ''; searchResults.innerHTML = '';
+  });
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { searchOverlay.classList.remove('active'); searchInput.value = ''; searchResults.innerHTML = ''; }
+  });
+
+  var searchTimeout;
+  searchInput.addEventListener('input', function () {
+    clearTimeout(searchTimeout);
+    var q = this.value.trim();
+    if (q.length < 2) { searchResults.innerHTML = ''; return; }
+    searchTimeout = setTimeout(async function () {
+      try {
+        var res = await fetch('/api/search?q=' + encodeURIComponent(q));
+        var data = await res.json();
+        var html = '';
+        if (data.users && data.users.length) {
+          data.users.forEach(function (u) {
+            var av = u.profile_picture ? '<img src="' + u.profile_picture + '" class="search-result-avatar">' : '<div class="search-result-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>';
+            html += '<div class="search-result-item">' + av + '<div><div style="font-size:13px;font-weight:600;color:var(--txt-primary)">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div style="font-size:11px;color:var(--txt-muted)">@' + u.username + '</div></div></div>';
+          });
+        }
+        if (data.posts && data.posts.length) {
+          data.posts.forEach(function (p) {
+            html += '<div class="search-result-item" style="cursor:pointer" onclick="searchOverlay.classList.remove(\'active\');switchView(\'feed\');"><div style="width:32px;height:32px;border-radius:50%;background:rgba(139,124,248,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:var(--a-violet);font-size:12px"></i></div><div><div style="font-size:13px;font-weight:600;color:var(--txt-primary)">' + escapeHtml(p.title) + '</div><div style="font-size:11px;color:var(--txt-muted)">' + p.topic + ' · @' + p.username + '</div></div></div>';
+          });
+        }
+        if (!html) html = '<div style="color:var(--txt-muted);font-size:13px;padding:12px 0;text-align:center;">No results found</div>';
+        searchResults.innerHTML = html;
+      } catch (_) { searchResults.innerHTML = '<div style="color:var(--txt-muted);font-size:13px;padding:12px 0;text-align:center;">Search failed</div>'; }
+    }, 300);
+  });
+
+  /* ── NOTIFICATIONS ── */
+  var notifBtn = document.getElementById('notif-btn');
+  var notifDrop = document.getElementById('notif-dropdown');
+  notifBtn.addEventListener('click', function (e) {
+    if (notifDrop.contains(e.target) && e.target !== notifBtn) return;
+    e.stopPropagation();
+    notifDrop.classList.toggle('open');
+    if (notifDrop.classList.contains('open')) loadNotifications();
+  });
+  document.addEventListener('click', function (e) {
+    if (!notifBtn.contains(e.target)) notifDrop.classList.remove('open');
+  });
+
+  async function loadNotifications() {
+    try {
+      var res = await fetch('/api/notifications');
+      var data = await res.json();
+      var list = document.getElementById('notif-list');
+      var dot  = document.getElementById('notif-dot');
+      dot.style.display = data.unread > 0 ? 'block' : 'none';
+      if (!data.notifications || !data.notifications.length) {
+        list.innerHTML = '<div class="notif-empty">No notifications yet</div>'; return;
+      }
+      list.innerHTML = data.notifications.map(function (n) {
+        return '<div class="notif-item ' + (n.is_read ? '' : 'unread') + '" onclick="markRead(' + n.id + ')"><div class="notif-dot-indicator" style="opacity:' + (n.is_read ? '0' : '1') + '"></div><div class="notif-content"><div class="notif-title">' + escapeHtml(n.title) + '</div><div class="notif-body">' + escapeHtml(n.body || '') + '</div><div class="notif-time">' + formatTimeAgo(n.created_at) + '</div></div></div>';
+      }).join('');
+    } catch (_) {}
   }
 
-  function getTopicClass(topic) {
-    var map = { 'General': 'topic-general', 'Math': 'topic-math', 'Science': 'topic-science', 'Notes': 'topic-notes', 'Help Needed': 'topic-help' };
-    return map[topic] || 'topic-general';
+  window.markRead = async function (id) {
+    try { await fetch('/api/notifications/' + id + '/read', { method: 'POST' }); loadNotifications(); } catch (_) {}
+  };
+  document.getElementById('notif-read-all').addEventListener('click', async function () {
+    try { await fetch('/api/notifications/read-all', { method: 'POST' }); loadNotifications(); } catch (_) {}
+  });
+
+  /* ── LEADERBOARD ── */
+  async function loadLeaderboard() {
+    var list = document.getElementById('leaderboard-list');
+    if (!list) return;
+    try {
+      var res = await fetch('/api/leaderboard');
+      var users = await res.json();
+      if (!users || !users.length) { list.innerHTML = '<div style="color:var(--txt-muted);font-size:12px;padding:12px 16px;">No data yet</div>'; return; }
+      list.innerHTML = users.map(function (u, i) {
+        var av = u.profile_picture ? '<img src="' + u.profile_picture + '" class="leaderboard-avatar">' : '<div class="leaderboard-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>';
+        return '<div class="leaderboard-item"><div class="leaderboard-rank ' + (i < 3 ? 'top' : '') + '">' + (i + 1) + '</div>' + av + '<div class="leaderboard-info"><div class="leaderboard-name">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div class="leaderboard-stats">' + (u.post_count || 0) + ' posts · ' + (u.like_count || 0) + ' likes</div></div><div class="leaderboard-score">' + (u.score || 0) + '</div></div>';
+      }).join('');
+      var me = users.findIndex(function (u) { return u.id == currentUser.id; });
+      var sr = document.getElementById('stat-rank');
+      if (sr) sr.textContent = me >= 0 ? '#' + (me + 1) : '#-';
+    } catch (_) { list.innerHTML = '<div style="color:var(--txt-muted);font-size:12px;padding:12px 16px;">Failed to load</div>'; }
   }
 
-  function getUserAvatarHTML(user, size) {
-    size = size || '36px';
-    var style = size === '36px' ? 'post-avatar' : size === '28px' ? 'leaderboard-avatar' : size === '26px' ? 'online-avatar' : 'comment-avatar';
-    var initialsStyle = size === '36px' ? 'post-avatar-initials' : size === '28px' ? 'leaderboard-initials' : size === '26px' ? 'online-initials' : 'comment-initials';
-    var name = user.first_name || user.name || 'User';
-    var last = user.last_name || '';
-    var initials = (name[0] || 'U') + (last[0] || '');
-    if (user.profile_picture) {
-      return '<img src="' + user.profile_picture + '" class="' + style + '" alt="Avatar">';
-    }
-    return '<div class="' + initialsStyle + '">' + initials + '</div>';
+  /* ── ONLINE USERS ── */
+  async function loadOnlineUsers() {
+    var list = document.getElementById('online-list');
+    if (!list) return;
+    try {
+      var res = await fetch('/api/online');
+      var users = await res.json();
+      if (!users || !users.length) { list.innerHTML = '<div style="color:var(--txt-muted);font-size:12px;padding:12px 16px;">No one online</div>'; return; }
+      list.innerHTML = users.map(function (u) {
+        var av = u.profile_picture ? '<img src="' + u.profile_picture + '" class="online-avatar">' : '<div class="online-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>';
+        return '<div class="online-item">' + av + '<div class="online-name">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div class="online-status"></div></div>';
+      }).join('');
+    } catch (_) {}
   }
 
-  function escapeHtml(text) {
-    if (!text) return '';
-    var div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  /* ── FEED ── */
+  var currentFilter = 'all', currentTopic = '';
+
+  function getTopicClass(t) {
+    return { General:'topic-general', Math:'topic-math', Science:'topic-science', Notes:'topic-notes', 'Help Needed':'topic-help' }[t] || 'topic-general';
   }
 
   function renderPosts(posts) {
-    var container = document.getElementById('posts-container');
-    if (!posts || posts.length === 0) {
-      container.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-inbox empty-icon-fa"></i><div>No posts yet</div><div class="empty-sub">Be the first to share something with the community!</div></div>';
+    var c = document.getElementById('posts-container');
+    if (!posts || !posts.length) {
+      c.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-inbox empty-icon-fa"></i><div>No posts yet</div><div class="empty-sub">Be the first to share something!</div></div>';
       return;
     }
-    container.innerHTML = posts.map(function(post) {
-      return '<div class="post-card" data-post-id="' + post.id + '"><div class="post-header">' + getUserAvatarHTML(post) + '<div class="post-meta"><div class="post-author">' + escapeHtml(post.first_name + ' ' + post.last_name) + '</div><div class="post-handle">@' + post.username + ' &middot; <span class="post-time">' + formatTimeAgo(post.created_at) + '</span></div></div><div class="post-topic-badge ' + getTopicClass(post.topic) + '">' + post.topic + '</div></div><div class="post-title">' + escapeHtml(post.title) + '</div><div class="post-body">' + escapeHtml(post.body) + '</div><div class="post-actions"><button class="post-action-btn ' + (post.user_liked ? 'liked' : '') + '" onclick="toggleLike(' + post.id + ')"><i class="' + (post.user_liked ? 'fa-solid' : 'fa-regular') + ' fa-heart"></i><span id="likes-' + post.id + '">' + (post.likes || 0) + '</span></button><button class="post-action-btn" onclick="toggleComments(' + post.id + ')"><i class="fa-regular fa-comment"></i><span id="comments-' + post.id + '">' + (post.comments || 0) + '</span></button><button class="post-action-btn" onclick="showToast(\'Message feature coming soon!\', \'info\')"><i class="fa-regular fa-envelope"></i><span>Message</span></button></div><div class="comments-section" id="comments-section-' + post.id + '"><div class="comment-input-wrap"><input type="text" class="comment-input" id="comment-input-' + post.id + '" placeholder="Write a comment..."><button class="comment-submit" onclick="submitComment(' + post.id + ')">Reply</button></div><div class="comments-list" id="comments-list-' + post.id + '"></div></div></div>';
+    c.innerHTML = posts.map(function (p) {
+      var av = p.profile_picture ? '<img src="' + p.profile_picture + '" class="post-avatar">' : '<div class="post-avatar-initials">' + (p.first_name ? p.first_name[0] : 'U') + (p.last_name ? p.last_name[0] : '') + '</div>';
+      return '<div class="post-card" data-post-id="' + p.id + '"><div class="post-header">' + av + '<div class="post-meta"><div class="post-author">' + escapeHtml(p.first_name + ' ' + p.last_name) + '</div><div class="post-handle">@' + p.username + ' · <span class="post-time">' + formatTimeAgo(p.created_at) + '</span></div></div><div class="post-topic-badge ' + getTopicClass(p.topic) + '">' + p.topic + '</div></div><div class="post-title">' + escapeHtml(p.title) + '</div><div class="post-body">' + escapeHtml(p.body) + '</div><div class="post-actions"><button class="post-action-btn ' + (p.user_liked ? 'liked' : '') + '" onclick="toggleLike(' + p.id + ')"><i class="' + (p.user_liked ? 'fa-solid' : 'fa-regular') + ' fa-heart"></i><span id="likes-' + p.id + '">' + (p.likes || 0) + '</span></button><button class="post-action-btn" onclick="toggleComments(' + p.id + ')"><i class="fa-regular fa-comment"></i><span id="comments-' + p.id + '">' + (p.comments || 0) + '</span></button><button class="post-action-btn" onclick="showToast(\'Message feature coming soon!\',\'info\')"><i class="fa-regular fa-envelope"></i></button></div><div class="comments-section" id="comments-section-' + p.id + '"><div class="comment-input-wrap"><input class="comment-input" id="comment-input-' + p.id + '" placeholder="Write a comment…" onkeydown="if(event.key===\'Enter\')submitComment(' + p.id + ')"><button class="comment-submit" onclick="submitComment(' + p.id + ')">Reply</button></div><div class="comments-list" id="comments-list-' + p.id + '"></div></div></div>';
     }).join('');
   }
 
   async function loadPosts() {
-    var container = document.getElementById('posts-container');
-    container.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i><div>Loading posts...</div></div>';
+    var c = document.getElementById('posts-container');
+    c.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i><div>Loading posts…</div></div>';
     try {
       var url = '/api/posts?filter=' + currentFilter;
       if (currentTopic) url += '&topic=' + encodeURIComponent(currentTopic);
       var res = await fetch(url);
-      postsData = await res.json();
-      if (currentFilter === 'liked') postsData = postsData.filter(function(p) { return p.user_liked; });
-      renderPosts(postsData);
-    } catch (err) {
-      container.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-triangle-exclamation empty-icon-fa"></i><div>Failed to load posts</div><div class="empty-sub">Check your connection and try again</div></div>';
+      var posts = await res.json();
+      if (currentFilter === 'liked') posts = posts.filter(function (p) { return p.user_liked; });
+      renderPosts(posts);
+    } catch (_) {
+      c.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-triangle-exclamation empty-icon-fa"></i><div>Failed to load posts</div></div>';
     }
   }
 
-  window.toggleLike = async function(postId) {
+  window.toggleLike = async function (postId) {
     try {
       var res = await fetch('/api/posts/' + postId + '/like', { method: 'POST' });
       var data = await res.json();
       var btn = document.querySelector('.post-card[data-post-id="' + postId + '"] .post-action-btn:first-child');
       var icon = btn.querySelector('i');
       var count = document.getElementById('likes-' + postId);
-      if (data.liked) {
-        btn.classList.add('liked');
-        icon.className = 'fa-solid fa-heart';
-        showToast('Post liked!', 'success');
-      } else {
-        btn.classList.remove('liked');
-        icon.className = 'fa-regular fa-heart';
-      }
+      btn.classList.toggle('liked', data.liked);
+      icon.className = data.liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
       if (count) count.textContent = data.count;
-    } catch (err) {
-      showToast('Failed to like post', 'error');
-    }
+      if (data.liked) showToast('Post liked!', 'success');
+    } catch (_) { showToast('Failed to like post', 'error'); }
   };
 
-  window.toggleComments = async function(postId) {
+  window.toggleComments = async function (postId) {
     var section = document.getElementById('comments-section-' + postId);
     section.classList.toggle('open');
     if (section.classList.contains('open')) {
       var list = document.getElementById('comments-list-' + postId);
-      list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Loading comments...</div>';
+      list.innerHTML = '<div style="color:var(--txt-muted);font-size:12px;padding:8px 0">Loading…</div>';
       try {
         var res = await fetch('/api/posts/' + postId + '/comments');
         var comments = await res.json();
-        if (comments.length === 0) {
-          list.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:8px 0">No comments yet. Be the first!</div>';
+        if (!comments.length) {
+          list.innerHTML = '<div style="color:var(--txt-dim);font-size:12px;padding:8px 0">No comments yet. Be the first!</div>';
         } else {
-          list.innerHTML = comments.map(function(c) {
-            return '<div class="comment-item">' + getUserAvatarHTML(c, '28px') + '<div class="comment-content"><div class="comment-author">' + escapeHtml(c.first_name + ' ' + c.last_name) + '</div><div class="comment-text">' + escapeHtml(c.body) + '</div><div class="comment-time">' + formatTimeAgo(c.created_at) + '</div></div></div>';
+          list.innerHTML = comments.map(function (c) {
+            var av = c.profile_picture ? '<img src="' + c.profile_picture + '" class="comment-avatar">' : '<div class="comment-initials">' + (c.first_name ? c.first_name[0] : 'U') + (c.last_name ? c.last_name[0] : '') + '</div>';
+            return '<div class="comment-item">' + av + '<div class="comment-content"><div class="comment-author">' + escapeHtml(c.first_name + ' ' + c.last_name) + '</div><div class="comment-text">' + escapeHtml(c.body) + '</div><div class="comment-time">' + formatTimeAgo(c.created_at) + '</div></div></div>';
           }).join('');
         }
-      } catch (err) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Failed to load comments</div>';
-      }
+      } catch (_) { list.innerHTML = '<div style="color:var(--txt-muted);font-size:12px;padding:8px 0">Failed to load</div>'; }
     }
   };
 
-  window.submitComment = async function(postId) {
+  window.submitComment = async function (postId) {
     var input = document.getElementById('comment-input-' + postId);
     var body = input.value.trim();
     if (!body) return;
@@ -1215,41 +1417,27 @@
         var count = document.getElementById('comments-' + postId);
         if (count) count.textContent = parseInt(count.textContent) + 1;
         showToast('Comment added!', 'success');
+        document.getElementById('comments-section-' + postId).classList.remove('open');
         toggleComments(postId);
-        toggleComments(postId);
-      } else {
-        showToast('Failed to add comment', 'error');
-      }
-    } catch (err) {
-      showToast('Failed to add comment', 'error');
-    }
+      } else { showToast('Failed to add comment', 'error'); }
+    } catch (_) { showToast('Failed to add comment', 'error'); }
   };
 
-  document.querySelectorAll('.feed-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.feed-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.feed-tab').forEach(function (t) { t.classList.remove('active'); });
       tab.classList.add('active');
       currentFilter = tab.dataset.filter;
       loadPosts();
     });
   });
 
-  document.querySelectorAll('.nav-item[data-topic]').forEach(function(item) {
-    item.addEventListener('click', function(e) {
-      e.preventDefault();
-      currentTopic = item.dataset.topic;
-      switchView('feed');
-      showToast('Filtered by topic: ' + currentTopic, 'info');
-    });
-  });
-
-  document.getElementById('post-submit').addEventListener('click', async function() {
+  document.getElementById('post-submit').addEventListener('click', async function () {
     var title = document.getElementById('post-title').value.trim();
-    var body = document.getElementById('post-body').value.trim();
+    var body  = document.getElementById('post-body').value.trim();
     var topic = document.getElementById('post-topic').value;
     if (!title || !body) { showToast('Please enter both title and body', 'error'); return; }
-    var btn = this;
-    btn.disabled = true;
+    this.disabled = true;
     try {
       var res = await fetch('/api/posts', {
         method: 'POST',
@@ -1259,215 +1447,51 @@
       if (res.ok) {
         document.getElementById('post-title').value = '';
         document.getElementById('post-body').value = '';
-        showToast('Post created successfully!', 'success');
-        loadPosts();
-        loadDashboardStats();
-      } else {
-        showToast('Failed to create post', 'error');
-      }
-    } catch (err) {
-      showToast('Failed to create post', 'error');
-    }
-    btn.disabled = false;
+        showToast('Post created!', 'success');
+        loadPosts(); loadDashboardStats();
+      } else { showToast('Failed to create post', 'error'); }
+    } catch (_) { showToast('Failed to create post', 'error'); }
+    this.disabled = false;
   });
 
-  /* Search */
-  var searchOverlay = document.getElementById('search-overlay');
-  var searchInput = document.getElementById('search-input');
-  var searchResults = document.getElementById('search-results');
-
-  document.getElementById('search-btn').addEventListener('click', function() {
-    searchOverlay.classList.add('active');
-    setTimeout(function() { searchInput.focus(); }, 50);
-  });
-
-  document.getElementById('search-close').addEventListener('click', function() {
-    searchOverlay.classList.remove('active');
-    searchInput.value = '';
-    searchResults.innerHTML = '';
-  });
-
-  var searchTimeout;
-  searchInput.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    var q = this.value.trim();
-    if (q.length < 2) { searchResults.innerHTML = ''; return; }
-    searchTimeout = setTimeout(async function() {
-      try {
-        var res = await fetch('/api/search?q=' + encodeURIComponent(q));
-        var data = await res.json();
-        var html = '';
-        if (data.users && data.users.length) {
-          html += '<div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding:0 4px">Users</div>';
-          html += data.users.map(function(u) {
-            return '<div class="search-result-item">' + (u.profile_picture ? '<img src="' + u.profile_picture + '" class="search-result-avatar">' : '<div class="search-result-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>') + '<div><div style="font-size:13px;font-weight:600;color:var(--text)">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div style="font-size:11px;color:var(--text-muted)">@' + u.username + '</div></div></div>';
-          }).join('');
-        }
-        if (data.posts && data.posts.length) {
-          html += '<div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;padding:0 4px">Posts</div>';
-          html += data.posts.map(function(p) {
-            return '<div class="search-result-item" style="cursor:pointer" onclick="document.getElementById(\'search-overlay\').classList.remove(\'active\'); switchView(\'feed\');"><div style="width:32px;height:32px;border-radius:50%;background:rgba(59,158,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-file-lines" style="color:var(--accent);font-size:12px"></i></div><div><div style="font-size:13px;font-weight:600;color:var(--text)">' + escapeHtml(p.title) + '</div><div style="font-size:11px;color:var(--text-muted)">' + p.topic + ' &middot; @' + p.username + '</div></div></div>';
-          }).join('');
-        }
-        if (!html) html = '<div style="color:var(--text-muted);font-size:12px;padding:12px">No results found</div>';
-        searchResults.innerHTML = html;
-      } catch (err) {
-        searchResults.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:12px">Search failed</div>';
-      }
-    }, 300);
-  });
-
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      searchOverlay.classList.remove('active');
-      searchInput.value = '';
-      searchResults.innerHTML = '';
-    }
-  });
-
-  /* Notifications */
-  var notifBtn = document.getElementById('notif-btn');
-  var notifDropdown = document.getElementById('notif-dropdown');
-
-  notifBtn.addEventListener('click', function(e) {
-    if (notifDropdown.contains(e.target)) return;
-    e.stopPropagation();
-    notifDropdown.classList.toggle('open');
-    if (notifDropdown.classList.contains('open')) loadNotifications();
-  });
-
-  document.addEventListener('click', function(e) {
-    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
-      notifDropdown.classList.remove('open');
-    }
-  });
-
-  async function loadNotifications() {
-    try {
-      var res = await fetch('/api/notifications');
-      var data = await res.json();
-      var list = document.getElementById('notif-list');
-      var dot = document.getElementById('notif-dot');
-      if (data.unread > 0) dot.style.display = 'block'; else dot.style.display = 'none';
-      if (!data.notifications || data.notifications.length === 0) {
-        list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
-        return;
-      }
-      list.innerHTML = data.notifications.map(function(n) {
-        return '<div class="notif-item ' + (n.is_read ? '' : 'unread') + '" onclick="markRead(' + n.id + ')"><div class="notif-dot" style="opacity:' + (n.is_read ? '0' : '1') + '"></div><div class="notif-content"><div class="notif-title">' + escapeHtml(n.title) + '</div><div class="notif-body">' + escapeHtml(n.body || '') + '</div><div class="notif-time">' + formatTimeAgo(n.created_at) + '</div></div></div>';
-      }).join('');
-    } catch (err) {}
-  }
-
-  window.markRead = async function(id) {
-    try {
-      await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
-      loadNotifications();
-    } catch (err) {}
-  };
-
-  document.getElementById('notif-read-all').addEventListener('click', async function() {
-    try {
-      await fetch('/api/notifications/read-all', { method: 'POST' });
-      loadNotifications();
-    } catch (err) {}
-  });
-
-  /* Leaderboard */
-  async function loadLeaderboard() {
-    var list = document.getElementById('leaderboard-list');
-    if (!list) return;
-    try {
-      var res = await fetch('/api/leaderboard');
-      var users = await res.json();
-      if (!users || users.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">No data yet</div>';
-        return;
-      }
-      list.innerHTML = users.map(function(u, i) {
-        return '<div class="leaderboard-item"><div class="leaderboard-rank ' + (i < 3 ? 'top' : '') + '">' + (i + 1) + '</div>' + (u.profile_picture ? '<img src="' + u.profile_picture + '" class="leaderboard-avatar">' : '<div class="leaderboard-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>') + '<div class="leaderboard-info"><div class="leaderboard-name">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div class="leaderboard-stats">' + (u.post_count || 0) + ' posts &middot; ' + (u.like_count || 0) + ' likes</div></div><div class="leaderboard-score">' + (u.score || 0) + '</div></div>';
-      }).join('');
-      var meIndex = users.findIndex(function(u) { return u.id == currentUser.id; });
-      var statRank = document.getElementById('stat-rank');
-      if (statRank) statRank.textContent = meIndex >= 0 ? '#' + (meIndex + 1) : '#-';
-    } catch (err) {
-      list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Failed to load</div>';
-    }
-  }
-
-  /* Online Users */
-  async function loadOnlineUsers() {
-    var list = document.getElementById('online-list');
-    if (!list) return;
-    try {
-      var res = await fetch('/api/online');
-      var users = await res.json();
-      if (!users || users.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">No one online</div>';
-        return;
-      }
-      list.innerHTML = users.map(function(u) {
-        return '<div class="online-item">' + (u.profile_picture ? '<img src="' + u.profile_picture + '" class="online-avatar">' : '<div class="online-initials">' + (u.first_name ? u.first_name[0] : '') + (u.last_name ? u.last_name[0] : '') + '</div>') + '<div class="online-name">' + escapeHtml(u.first_name + ' ' + u.last_name) + '</div><div class="online-status"></div></div>';
-      }).join('');
-    } catch (err) {
-      list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Failed to load</div>';
-    }
-  }
-
-  /* Reports Data */
+  /* ── REPORTS ── */
   async function loadReportsData() {
     try {
       var res = await fetch('/api/stats');
       var stats = await res.json();
       document.getElementById('report-sessions').textContent = stats.posts || 0;
       document.getElementById('report-total').textContent = (stats.study_hours || 0) + 'h';
-      var goalPct = Math.min(100, Math.round(((stats.weekly_done || 0) / 10) * 100));
-      document.getElementById('report-goal').textContent = goalPct + '%';
+      document.getElementById('report-goal').textContent = Math.min(100, Math.round(((stats.weekly_done || 0) / 10) * 100)) + '%';
 
-      // Monthly chart
       var mres = await fetch('/api/sessions/monthly');
       var monthly = await mres.json();
       var chart = document.getElementById('report-monthly-chart');
-      var maxH = Math.max.apply(null, monthly.map(function(d) { return d.hours; })) || 1;
-      var hasData = monthly.some(function(d) { return d.hours > 0; });
-      if (hasData) {
-        chart.innerHTML = monthly.map(function(d) {
-          var h = Math.max(12, (d.hours / maxH) * 80);
-          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar filled" style="height:' + h + '%"></div></div><div class="act-day">' + d.week + '</div></div>';
-        }).join('');
-      } else {
-        chart.innerHTML = monthly.map(function(d) {
-          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:12%"></div></div><div class="act-day">' + d.week + '</div></div>';
-        }).join('');
-      }
+      var maxH = Math.max.apply(null, monthly.map(function (d) { return d.hours; })) || 1;
+      chart.innerHTML = monthly.map(function (d) {
+        var h = d.hours > 0 ? Math.max(12, (d.hours / maxH) * 80) : 12;
+        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + (d.hours > 0 ? 'filled' : 'empty') + '" style="height:' + h + '%"></div></div><div class="act-day">' + d.week + '</div></div>';
+      }).join('');
 
-      // Subject breakdown
       var bres = await fetch('/api/sessions/subject-breakdown');
       var breakdown = await bres.json();
       var bel = document.getElementById('subject-breakdown');
-      var hasBreakdown = breakdown && breakdown.some(function(s) { return s.total > 0; });
+      var hasBreakdown = breakdown && breakdown.some(function (s) { return s.total > 0; });
       if (hasBreakdown) {
-        var maxTotal = Math.max.apply(null, breakdown.map(function(d) { return d.total; })) || 1;
-        bel.innerHTML = '<div class="breakdown-list">' + breakdown.map(function(s) {
-          var pct = Math.round((s.total / maxTotal) * 100);
-          var hours = Math.round(s.total / 60 * 10) / 10;
-          return '<div class="breakdown-item"><div class="breakdown-color" style="background:' + (s.color || '#3b9eff') + '"></div><div class="breakdown-name">' + escapeHtml(s.name) + '</div><div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:' + pct + '%;background:' + (s.color || '#3b9eff') + '"></div></div><div class="breakdown-time">' + hours + 'h</div></div>';
+        var maxT = Math.max.apply(null, breakdown.map(function (d) { return d.total; })) || 1;
+        bel.innerHTML = '<div class="breakdown-list">' + breakdown.map(function (s) {
+          var pct = Math.round((s.total / maxT) * 100);
+          return '<div class="breakdown-item"><div class="breakdown-color" style="background:' + (s.color || '#8b7cf8') + '"></div><div class="breakdown-name">' + escapeHtml(s.name) + '</div><div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:' + pct + '%;background:' + (s.color || '#8b7cf8') + '"></div></div><div class="breakdown-time">' + Math.round(s.total / 60 * 10) / 10 + 'h</div></div>';
         }).join('') + '</div>';
       } else {
-        bel.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying to see your breakdown</div></div>';
+        bel.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-chart-pie empty-icon-fa"></i><div>No data yet</div><div class="empty-sub">Add subjects and start studying</div></div>';
       }
 
-      // Best day calculation
       var sres = await fetch('/api/sessions/weekly');
       var weekly = await sres.json();
-      var bestDay = weekly.reduce(function(best, d) {
-        return (d.minutes > best.minutes) ? d : best;
-      }, { minutes: 0, day: '—' });
-      document.getElementById('report-best').textContent = bestDay.minutes > 0 ? bestDay.day : '—';
-
-      // Study log for reports page
+      var best = weekly.reduce(function (b, d) { return d.minutes > b.minutes ? d : b; }, { minutes: 0, day: '—' });
+      document.getElementById('report-best').textContent = best.minutes > 0 ? best.day : '—';
       loadStudyLogForReports();
-    } catch (err) {}
+    } catch (_) {}
   }
 
   async function loadStudyLogForReports() {
@@ -1476,12 +1500,12 @@
       var sessions = await res.json();
       var el = document.getElementById('study-log-reports');
       if (!el) return;
-      if (!sessions || sessions.length === 0) {
-        el.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions recorded yet</div><div class="empty-sub">Start logging your study sessions to track progress</div></div>';
+      if (!sessions || !sessions.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-clipboard-list empty-icon-fa"></i><div>No sessions yet</div><div class="empty-sub">Start logging your study sessions to track progress</div></div>';
         return;
       }
-      el.innerHTML = '<div class="log-list">' + sessions.slice(0, 15).map(function(s) {
-        var color = s.subject_color || '#3b9eff';
+      el.innerHTML = '<div class="log-list">' + sessions.slice(0, 15).map(function (s) {
+        var color = s.subject_color || '#8b7cf8';
         var name = s.subject_name || 'General';
         var date = new Date(s.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         var hours = Math.floor(s.duration_minutes / 60);
@@ -1489,83 +1513,69 @@
         var timeStr = hours > 0 ? hours + 'h ' + mins + 'm' : mins + ' min';
         return '<div class="log-item"><div class="log-color" style="background:' + color + '"></div><div class="log-info"><div class="log-subject">' + escapeHtml(name) + '</div><div class="log-meta">' + date + (s.notes ? ' — ' + escapeHtml(s.notes.substring(0, 40)) : '') + '</div></div><div class="log-duration">' + timeStr + '</div></div>';
       }).join('') + '</div>';
-    } catch (err) {}
+    } catch (_) {}
   }
 
-  /* Statistics Data */
+  /* ── STATISTICS ── */
   async function loadStatisticsData() {
     try {
       var res = await fetch('/api/flashcards');
       var cards = await res.json();
-      var totalReviews = cards.reduce(function(sum, c) { return sum + (c.review_count || 0); }, 0);
-      var totalCorrect = cards.reduce(function(sum, c) { return sum + (c.correct_count || 0); }, 0);
+      var totalReviews = cards.reduce(function (s, c) { return s + (c.review_count || 0); }, 0);
+      var totalCorrect = cards.reduce(function (s, c) { return s + (c.correct_count || 0); }, 0);
       var accuracy = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0;
       document.getElementById('stat-reviewed').textContent = totalReviews;
       document.getElementById('stat-accuracy').textContent = accuracy + '%';
-      document.getElementById('stat-quizzes').textContent = totalReviews;
+      document.getElementById('stat-quizzes').textContent  = totalReviews;
 
       var pres = await fetch('/api/sessions/peak-hours');
       var peaks = await pres.json();
-      var labels = {6: '6am', 9: '9am', 12: '12p', 15: '3pm', 18: '6pm', 21: '9pm', 0: '12a'};
+      var labels = {6:'6am', 9:'9am', 12:'12p', 15:'3pm', 18:'6pm', 21:'9pm', 0:'12a'};
       var maxPeak = Math.max.apply(null, Object.values(peaks)) || 1;
-      var hasPeakData = Object.values(peaks).some(function(v) { return v > 0; });
-      var pchart = document.getElementById('peak-hours-chart');
-      if (hasPeakData) {
-        pchart.innerHTML = [6, 9, 12, 15, 18, 21, 0].map(function(h) {
-          var val = peaks[h] || 0;
-          var pct = Math.max(16, (val / maxPeak) * 80);
-          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar filled" style="height:' + pct + '%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
-        }).join('');
-      } else {
-        pchart.innerHTML = [6, 9, 12, 15, 18, 21, 0].map(function(h) {
-          return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar empty" style="height:16%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
-        }).join('');
-      }
+      var hasPeak = Object.values(peaks).some(function (v) { return v > 0; });
+      document.getElementById('peak-hours-chart').innerHTML = [6,9,12,15,18,21,0].map(function (h) {
+        var v = peaks[h] || 0;
+        var pct = hasPeak ? Math.max(16, (v / maxPeak) * 80) : 16;
+        return '<div class="act-col"><div class="act-bar-wrap"><div class="act-bar ' + (hasPeak && v > 0 ? 'filled' : 'empty') + '" style="height:' + pct + '%"></div></div><div class="act-day" style="font-size:9px">' + labels[h] + '</div></div>';
+      }).join('');
 
       var sres = await fetch('/api/sessions');
       var sessions = await sres.json();
-      var totalMins = sessions.reduce(function(s, x) { return s + x.duration_minutes; }, 0);
-      var avg = sessions.length > 0 ? Math.round(totalMins / sessions.length) : 0;
-      document.getElementById('perf-avg').textContent = avg + ' min';
+      var totalMins = sessions.reduce(function (s, x) { return s + x.duration_minutes; }, 0);
+      document.getElementById('perf-avg').textContent   = (sessions.length > 0 ? Math.round(totalMins / sessions.length) : 0) + ' min';
       document.getElementById('perf-total').textContent = sessions.length;
 
-      var streakRes = await fetch('/api/stats');
-      var streakData = await streakRes.json();
-      document.getElementById('perf-streak').textContent = (streakData.streak || 1) + ' day' + ((streakData.streak || 1) > 1 ? 's' : '');
-      document.getElementById('stat-achievements').textContent = Math.min(10, Math.floor((streakData.score || 0) / 50));
-
-      var retention = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0;
-      document.getElementById('perf-retention').textContent = retention + '%';
+      var stRes = await fetch('/api/stats');
+      var stData = await stRes.json();
+      var sv = stData.streak || 1;
+      document.getElementById('perf-streak').textContent       = sv + ' day' + (sv > 1 ? 's' : '');
+      document.getElementById('stat-achievements').textContent = Math.min(10, Math.floor((stData.score || 0) / 50));
+      document.getElementById('perf-retention').textContent    = (totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0) + '%';
 
       buildHeatmap();
-    } catch (err) {}
+    } catch (_) {}
   }
 
-  /* Modal Utils */
-  window.closeModal = function(id) {
+  /* ── MODAL UTILS ── */
+  window.closeModal = function (id) {
     document.getElementById(id).classList.remove('active');
   };
-
-  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
-    overlay.addEventListener('click', function(e) {
-      if (e.target === overlay) overlay.classList.remove('active');
-    });
+  document.querySelectorAll('.modal-overlay').forEach(function (o) {
+    o.addEventListener('click', function (e) { if (e.target === o) o.classList.remove('active'); });
   });
-
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay').forEach(function(m) { m.classList.remove('active'); });
+      document.querySelectorAll('.modal-overlay').forEach(function (m) { m.classList.remove('active'); });
+      searchOverlay.classList.remove('active');
     }
   });
 
-  /* Heartbeat */
-  function sendHeartbeat() {
-    fetch('/api/heartbeat', { method: 'POST' }).catch(function() {});
-  }
+  /* ── HEARTBEAT ── */
+  function sendHeartbeat() { fetch('/api/heartbeat', { method: 'POST' }).catch(function () {}); }
   setInterval(sendHeartbeat, 60000);
   sendHeartbeat();
 
-  /* Init */
+  /* ── INIT ── */
   loadDashboardStats();
   buildActivityChart();
   buildHeatmap();
@@ -1573,11 +1583,10 @@
   populateSubjectSelects();
   loadLeaderboard();
   loadOnlineUsers();
-  setInterval(function() { loadOnlineUsers(); }, 60000);
-  setInterval(function() { loadNotifications(); }, 30000);
+  setInterval(function () { loadOnlineUsers(); }, 60000);
+  setInterval(function () { loadNotifications(); }, 30000);
 
 })();
 </script>
-
 </body>
 </html>
