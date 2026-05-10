@@ -62,11 +62,11 @@
   </div>
 
   <div class="nav-right">
-    <div class="nav-icon-btn" id="search-btn" title="Search">
+    <div class="nav-icon-btn" id="search-btn" title="Search" style="margin:0 2px;">
       <i class="fa-solid fa-magnifying-glass"></i>
     </div>
 
-    <div class="nav-icon-btn" id="notif-btn" title="Notifications" style="position:relative;">
+    <div class="nav-icon-btn" id="notif-btn" title="Notifications" style="position:relative;margin:0 2px;">
       <i class="fa-solid fa-bell"></i>
       <div class="notif-dot" id="notif-dot" style="display:none;"></div>
       <div class="notif-dropdown" id="notif-dropdown">
@@ -80,11 +80,16 @@
       </div>
     </div>
 
-    <div class="theme-btn" id="theme-btn" title="Toggle theme">
+    <div class="nav-trash-btn" id="trash-nav-btn" title="Trash bin" style="margin:0 2px;">
+      <i class="fa-solid fa-trash-can"></i>
+      <span class="trash-count-badge" id="trash-count-badge">0</span>
+    </div>
+
+    <div class="theme-btn" id="theme-btn" title="Toggle theme" style="margin:0 2px;">
       <i class="fa-solid fa-sun" id="theme-icon"></i>
     </div>
 
-    <a class="nav-user" href="/profile" id="nav-user" title="View profile">
+    <a class="nav-user" href="/profile" id="nav-user" title="View profile" style="margin-left:4px;">
       <div class="nav-user-ava" id="nav-user-ava">
         {% if user.profile_picture %}
         <img src="{{ user.profile_picture }}" alt="">
@@ -94,14 +99,51 @@
       </div>
       <span class="nav-user-name">{{ user.first_name or "" }}</span>
       <i class="fa-solid fa-arrow-right-from-bracket" id="logout-btn"
-         style="font-size:12px;color:var(--txt-muted);cursor:pointer;transition:color 0.2s;"
+         style="font-size:12px;color:var(--txt-muted);cursor:pointer;transition:color 0.2s;margin-left:2px;"
          title="Sign out"
          onmouseenter="this.style.color='var(--a-rose)'"
          onmouseleave="this.style.color='var(--txt-muted)'"></i>
     </a>
 
-    <div class="nav-hamburger" id="nav-hamburger">
+    <div class="nav-hamburger" id="nav-hamburger" style="margin-left:4px;">
       <i class="fa-solid fa-bars"></i>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-dialog">
+      <div class="confirm-icon" id="confirm-icon"><i id="confirm-icon-i" class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-body" id="confirm-body">This action cannot be undone.</div>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" onclick="SHConfirm.cancel()">Cancel</button>
+        <button id="confirm-proceed-btn" class="confirm-proceed-danger" onclick="SHConfirm.proceed()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trash Bin Modal -->
+  <div class="trash-modal-overlay" id="trash-modal-overlay">
+    <div class="trash-modal">
+      <div class="trash-modal-header">
+        <div class="trash-modal-icon"><i class="fa-solid fa-trash-can"></i></div>
+        <div>
+          <div class="trash-modal-title">Trash Bin</div>
+          <div class="trash-modal-sub">Items are permanently deleted after 30 days</div>
+        </div>
+        <button class="trash-modal-close" onclick="SHTrash.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="trash-actions-bar">
+        <span style="font-size:12px;color:var(--txt-muted);" id="trash-item-count">0 items</span>
+        <button class="trash-empty-btn" onclick="SHTrash.emptyAll()"><i class="fa-solid fa-trash" style="margin-right:5px;"></i>Empty Trash</button>
+      </div>
+      <div class="trash-list" id="trash-list-container">
+        <div class="trash-empty-state">
+          <i class="fa-solid fa-trash-can"></i>
+          <p>Trash is empty</p>
+        </div>
+      </div>
     </div>
   </div>
 </nav>

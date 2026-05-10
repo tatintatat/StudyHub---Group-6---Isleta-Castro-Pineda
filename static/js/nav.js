@@ -54,12 +54,21 @@ if (hamburger) hamburger.addEventListener('click', function() {
   document.getElementById('mobile-drawer').classList.toggle('open');
 });
 
-/* ── LOGOUT ── */
+/* ── LOGOUT (with confirmation) ── */
 var logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) logoutBtn.addEventListener('click', async function(e) {
   e.preventDefault(); e.stopPropagation();
-  await fetch('/api/logout', { method: 'POST' });
-  window.location.href = '/';
+  SHConfirm.show({
+    type: 'warning',
+    icon: 'fa-arrow-right-from-bracket',
+    title: 'Sign Out?',
+    body: 'You will be logged out of StudyHub. Any unsaved changes may be lost.',
+    confirmLabel: 'Sign Out',
+    onConfirm: async function() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/';
+    }
+  });
 });
 
 /* ── SEARCH ── */
@@ -172,3 +181,211 @@ sendHeartbeat();
 /* ── NOTIFICATION POLLING ── */
 setInterval(loadNotifications, 30000);
 loadNotifications();
+
+/* ══════════════════════════════════════════
+   GLOBAL CONFIRM DIALOG
+══════════════════════════════════════════ */
+window.SHConfirm = (function() {
+  var _cb = null;
+  var overlay = null;
+
+  function _init() {
+    if (overlay) return;
+    overlay = document.getElementById('confirm-overlay');
+  }
+
+  function show(opts) {
+    _init();
+    if (!overlay) return;
+    _cb = opts.onConfirm || null;
+    var type = opts.type || 'danger'; // 'danger' | 'warning'
+    var iconEl = document.getElementById('confirm-icon');
+    var iconI  = document.getElementById('confirm-icon-i');
+    var btn    = document.getElementById('confirm-proceed-btn');
+    iconEl.className = 'confirm-icon ' + type;
+    iconI.className  = 'fa-solid ' + (opts.icon || (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-trash'));
+    document.getElementById('confirm-title').textContent = opts.title || 'Are you sure?';
+    document.getElementById('confirm-body').textContent  = opts.body  || 'This action cannot be undone.';
+    btn.className = 'confirm-proceed-' + type;
+    btn.textContent = opts.confirmLabel || (type === 'warning' ? 'Proceed' : 'Delete');
+    overlay.classList.add('active');
+  }
+
+  function cancel() {
+    if (overlay) overlay.classList.remove('active');
+    _cb = null;
+  }
+
+  function proceed() {
+    if (overlay) overlay.classList.remove('active');
+    if (_cb) { var fn = _cb; _cb = null; fn(); }
+  }
+
+  // Close on backdrop click
+  document.addEventListener('DOMContentLoaded', function() {
+    var o = document.getElementById('confirm-overlay');
+    if (o) o.addEventListener('click', function(e) {
+      if (e.target === o) cancel();
+    });
+  });
+
+  return { show: show, cancel: cancel, proceed: proceed };
+})();
+
+/* ══════════════════════════════════════════
+   TRASH BIN SYSTEM (30-day localStorage)
+══════════════════════════════════════════ */
+window.SHTrash = (function() {
+  var STORAGE_KEY = 'studyhub_trash';
+  var DAYS_30 = 30 * 24 * 60 * 60 * 1000;
+
+  function _load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(_) { return []; }
+  }
+
+  function _save(items) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    _updateBadge();
+  }
+
+  function _updateBadge() {
+    var items = _getActive();
+    var badge = document.getElementById('trash-count-badge');
+    if (!badge) return;
+    if (items.length > 0) {
+      badge.style.display = 'flex';
+      badge.textContent = items.length > 99 ? '99+' : items.length;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function _getActive() {
+    var now = Date.now();
+    var items = _load().filter(function(i) { return (now - i.deletedAt) < DAYS_30; });
+    // Purge expired
+    _save._skipBadge = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    _save._skipBadge = false;
+    return items;
+  }
+
+  function _daysLeft(deletedAt) {
+    var ms = DAYS_30 - (Date.now() - deletedAt);
+    return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+  }
+
+  function addItem(item) {
+    // item: { id, name, type, icon, meta }
+    var items = _load();
+    item.deletedAt = Date.now();
+    item.trashId = 'ti_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    items.push(item);
+    _save(items);
+    showToast('"' + item.name + '" moved to trash', 'info');
+    _updateBadge();
+  }
+
+  function restore(trashId, onRestore) {
+    var items = _load();
+    var idx = items.findIndex(function(i) { return i.trashId === trashId; });
+    if (idx === -1) return;
+    var item = items.splice(idx, 1)[0];
+    _save(items);
+    if (onRestore) onRestore(item);
+    showToast('"' + item.name + '" restored', 'success');
+    renderModal();
+    _updateBadge();
+  }
+
+  function permDelete(trashId) {
+    SHConfirm.show({
+      type: 'danger',
+      icon: 'fa-trash',
+      title: 'Permanently Delete?',
+      body: 'This item will be removed forever and cannot be recovered.',
+      confirmLabel: 'Delete Forever',
+      onConfirm: function() {
+        var items = _load();
+        var idx = items.findIndex(function(i) { return i.trashId === trashId; });
+        if (idx !== -1) items.splice(idx, 1);
+        _save(items);
+        showToast('Item permanently deleted', 'info');
+        renderModal();
+        _updateBadge();
+      }
+    });
+  }
+
+  function emptyAll() {
+    var active = _getActive();
+    if (!active.length) { showToast('Trash is already empty', 'info'); return; }
+    SHConfirm.show({
+      type: 'danger',
+      icon: 'fa-trash',
+      title: 'Empty Trash?',
+      body: 'All ' + active.length + ' item(s) will be permanently deleted. This cannot be undone.',
+      confirmLabel: 'Empty Trash',
+      onConfirm: function() {
+        _save([]);
+        showToast('Trash emptied', 'info');
+        renderModal();
+        _updateBadge();
+      }
+    });
+  }
+
+  function renderModal() {
+    var container = document.getElementById('trash-list-container');
+    var countEl   = document.getElementById('trash-item-count');
+    if (!container) return;
+    var items = _getActive().sort(function(a,b){ return b.deletedAt - a.deletedAt; });
+    if (countEl) countEl.textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
+    if (!items.length) {
+      container.innerHTML = '<div class="trash-empty-state"><i class="fa-solid fa-trash-can"></i><p>Trash is empty</p></div>';
+      return;
+    }
+    container.innerHTML = items.map(function(item) {
+      var days = _daysLeft(item.deletedAt);
+      var cls  = days <= 3 ? 'urgent' : days <= 10 ? 'warning' : 'safe';
+      var lbl  = days === 0 ? 'Expires today' : days + 'd left';
+      var deletedDate = new Date(item.deletedAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+      return '<div class="trash-item" data-trash-id="' + item.trashId + '">' +
+        '<div class="trash-item-icon">' + (item.icon || '<i class="fa-solid fa-file" style="color:var(--a-blue)"></i>') + '</div>' +
+        '<div class="trash-item-info">' +
+          '<div class="trash-item-name">' + escapeHtml(item.name) + '</div>' +
+          '<div class="trash-item-meta">' + escapeHtml(item.type || 'File') + ' · Deleted ' + deletedDate + '</div>' +
+        '</div>' +
+        '<span class="trash-item-days ' + cls + '">' + lbl + '</span>' +
+        '<button class="trash-item-restore" title="Restore" onclick="SHTrash.restore(\'' + item.trashId + '\')"><i class="fa-solid fa-rotate-left"></i></button>' +
+        '<button class="trash-item-perm-del" title="Delete permanently" onclick="SHTrash.permDelete(\'' + item.trashId + '\')"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function openModal() {
+    renderModal();
+    var overlay = document.getElementById('trash-modal-overlay');
+    if (overlay) overlay.classList.add('active');
+  }
+
+  function closeModal() {
+    var overlay = document.getElementById('trash-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  // Trash modal backdrop close
+  document.addEventListener('DOMContentLoaded', function() {
+    var o = document.getElementById('trash-modal-overlay');
+    if (o) o.addEventListener('click', function(e) {
+      if (e.target === o) closeModal();
+    });
+    // Trash nav button
+    var trashBtn = document.getElementById('trash-nav-btn');
+    if (trashBtn) trashBtn.addEventListener('click', openModal);
+    // Init badge
+    _updateBadge();
+  });
+
+  return { addItem: addItem, restore: restore, permDelete: permDelete, emptyAll: emptyAll, openModal: openModal, closeModal: closeModal, renderModal: renderModal };
+})();

@@ -22,6 +22,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(32))
+app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB – enough for base64-encoded images
 
 # ── Database config ───────────────────────────────────────────────────────────
 DB_CONFIG = {
@@ -1038,15 +1039,12 @@ def get_user_profile(username):
 @app.route("/api/profile/photo", methods=["POST"])
 @login_required
 def update_profile_photo():
-    """
-    Accepts JSON { url: "..." } with a data URL or remote URL.
-    Also accepts multipart/form-data with a 'photo' file field.
-    In production, upload to S3/Cloudinary and store the CDN URL.
-    """
     url = ""
-    if request.content_type and "application/json" in request.content_type:
-        data = request.get_json() or {}
-        url  = data.get("url", "").strip()
+
+    ct = request.content_type or ""
+    if "application/json" in ct:
+        data = request.get_json(silent=True, force=True) or {}
+        url  = (data.get("url") or data.get("avatar_data") or "").strip()
 
     if not url and "photo" in request.files:
         import base64
@@ -1058,7 +1056,15 @@ def update_profile_photo():
     if not url:
         return jsonify({"error": "No photo provided."}), 400
 
-    execute("UPDATE users SET profile_picture=%s WHERE id=%s", (url, session["user_id"]))
+    if not (url.startswith("data:image/") or url.startswith("http")):
+        return jsonify({"error": "Invalid image data."}), 400
+
+    try:
+        execute("UPDATE users SET profile_picture=%s WHERE id=%s", (url, session["user_id"]))
+    except Exception as exc:
+        app.logger.error("Avatar save failed: %s", exc)
+        return jsonify({"error": "Database error saving photo."}), 500
+
     return jsonify({"url": url, "message": "Profile photo updated."})
 
 

@@ -60,7 +60,7 @@ function loadSubjects() {
       return '<div class="subject-item" style="animation-delay:' + (i * 0.06) + 's">' +
         '<div class="subject-color-dot" style="background:' + s.color + ';box-shadow:0 0 8px ' + s.color + '40;"></div>' +
         '<div class="subject-name">' + escapeHtml(s.name) + '</div>' +
-        '<button class="subject-delete" onclick="deleteSubject(' + s.id + ')"><i class="fa-solid fa-trash"></i></button></div>';
+        '<button class="subject-delete" onclick="deleteSubject(' + s.id + ',\'' + (s.name||'').replace(/\'/g,'') + '\')"><i class="fa-solid fa-trash"></i></button></div>';
     }).join('');
   }).catch(function() {});
 }

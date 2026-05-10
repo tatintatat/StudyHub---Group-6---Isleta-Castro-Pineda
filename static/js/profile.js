@@ -18,26 +18,47 @@ document.querySelectorAll('.profile-tab-btn').forEach(function(btn) {
 document.getElementById('ava-file-input').addEventListener('change', async function() {
   var file = this.files[0]; if (!file) return;
   if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
-  if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB', 'error'); return; }
-  var reader = new FileReader();
-  reader.onload = async function(e) {
+  if (file.size > 10 * 1024 * 1024) { showToast('Image must be under 10MB', 'error'); return; }
+
+  // Compress via canvas before uploading (keeps payload small)
+  function compressImage(file, maxW, quality, cb) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = function() { cb(null); };
+    img.src = url;
+  }
+
+  showToast('Uploading…', 'info');
+  compressImage(file, 400, 0.82, async function(dataUrl) {
+    if (!dataUrl) { showToast('Failed to process image', 'error'); return; }
     try {
-      var res = await fetch('/api/profile/avatar', {
+      var res = await fetch('/api/profile/photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_data: e.target.result })
+        body: JSON.stringify({ url: dataUrl })
       });
+      var data = {};
+      try { data = await res.json(); } catch(_) {}
       if (res.ok) {
-        var data = await res.json();
         var avaEl = document.getElementById('profile-ava');
-        avaEl.innerHTML = '<img src="' + data.url + '" alt="">';
+        avaEl.innerHTML = '<img src="' + (data.url || dataUrl) + '" alt="">';
         var navAva = document.getElementById('nav-user-ava');
-        if (navAva) navAva.innerHTML = '<img src="' + data.url + '" alt="">';
+        if (navAva) navAva.innerHTML = '<img src="' + (data.url || dataUrl) + '" alt="">';
         showToast('Profile picture updated!', 'success');
-      } else { showToast('Failed to upload image', 'error'); }
-    } catch(_) { showToast('Upload failed', 'error'); }
-  };
-  reader.readAsDataURL(file);
+      } else {
+        showToast(data.error || 'Failed to upload image', 'error');
+      }
+    } catch(err) { showToast('Upload failed: ' + err.message, 'error'); }
+  });
 });
 
 /* ── LOAD MY POSTS ── */
@@ -196,10 +217,19 @@ updateThemeLabel();
 var themeBtn = document.getElementById('theme-btn');
 if (themeBtn) themeBtn.addEventListener('click', function() { setTimeout(updateThemeLabel, 50); });
 
-/* ── SIGN OUT ── */
+/* ── SIGN OUT (with confirmation) ── */
 window.signOut = async function() {
-  await fetch('/api/logout', { method: 'POST' }).catch(function() {});
-  window.location.href = '/';
+  SHConfirm.show({
+    type: 'warning',
+    icon: 'fa-arrow-right-from-bracket',
+    title: 'Sign Out?',
+    body: 'You will be logged out of StudyHub. Any unsaved changes may be lost.',
+    confirmLabel: 'Sign Out',
+    onConfirm: async function() {
+      await fetch('/api/logout', { method: 'POST' }).catch(function() {});
+      window.location.href = '/';
+    }
+  });
 };
 
 window.renderProfileUI = function() {

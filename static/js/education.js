@@ -55,7 +55,7 @@ function renderEduSubjects(subjects) {
       '<div class="subject-mgmt-dot" style="background:' + s.color + ';box-shadow:0 0 8px ' + s.color + '50;"></div>' +
       '<div><div class="subject-mgmt-name">' + escapeHtml(s.name) + '</div>' +
       '<div class="subject-mgmt-count" id="smc-' + s.id + '">Loading…</div></div>' +
-      '<button class="subject-mgmt-del" onclick="deleteSubjectEdu(' + s.id + ')" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+      '<button class="subject-mgmt-del" onclick="deleteSubjectEdu(' + s.id + ',\'' + (s.name||'').replace(/\'/g,'') + '\')" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
       '</div>';
   }).join('');
   /* Count cards per subject */
@@ -69,13 +69,22 @@ function renderEduSubjects(subjects) {
   }).catch(function() {});
 }
 
-window.deleteSubjectEdu = function(sid) {
-  if (!confirm('Delete this subject? Flashcards in it will become unassigned.')) return;
-  fetch('/api/subjects/' + sid, { method: 'DELETE' }).then(function() {
-    showToast('Subject deleted', 'success');
-    loadEduSubjects();
-    loadEduStats();
-  }).catch(function() { showToast('Failed to delete', 'error'); });
+window.deleteSubjectEdu = function(sid, sname) {
+  SHConfirm.show({
+    type: 'danger',
+    icon: 'fa-trash',
+    title: 'Delete Subject?',
+    body: '"' + (sname || 'This subject') + '" will be moved to trash. Flashcards in it will become unassigned.',
+    confirmLabel: 'Move to Trash',
+    onConfirm: function() {
+      fetch('/api/subjects/' + sid, { method: 'DELETE' }).then(function() {
+        if (window.SHTrash) SHTrash.addItem({ id: sid, name: sname || 'Subject #' + sid, type: 'Subject', icon: '<i class="fa-solid fa-book-open" style="color:var(--a-blue)"></i>' });
+        else showToast('Subject deleted', 'success');
+        loadEduSubjects();
+        loadEduStats();
+      }).catch(function() { showToast('Failed to delete', 'error'); });
+    }
+  });
 };
 
 /* ══ FLASHCARDS ══ */
@@ -105,12 +114,22 @@ function renderEduFlashcards(cards) {
   }).join('');
 }
 
-window.deleteFCEdu = function(id) {
-  fetch('/api/flashcards/' + id, { method: 'DELETE' }).then(function() {
-    showToast('Flashcard deleted', 'success');
-    loadEduFlashcards();
-    loadEduStats();
-  }).catch(function() { showToast('Failed', 'error'); });
+window.deleteFCEdu = function(id, front) {
+  SHConfirm.show({
+    type: 'danger',
+    icon: 'fa-layer-group',
+    title: 'Delete Flashcard?',
+    body: 'This flashcard will be moved to trash and can be restored within 30 days.',
+    confirmLabel: 'Move to Trash',
+    onConfirm: function() {
+      fetch('/api/flashcards/' + id, { method: 'DELETE' }).then(function() {
+        if (window.SHTrash) SHTrash.addItem({ id: id, name: (front && front.length > 40 ? front.substring(0,40)+'…' : front) || 'Flashcard #' + id, type: 'Flashcard', icon: '<i class="fa-solid fa-layer-group" style="color:var(--a-cyan)"></i>' });
+        else showToast('Flashcard deleted', 'success');
+        loadEduFlashcards();
+        loadEduStats();
+      }).catch(function() { showToast('Failed', 'error'); });
+    }
+  });
 };
 
 var fcFilter = document.getElementById('fc-subject-filter');

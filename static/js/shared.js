@@ -107,17 +107,30 @@ window.submitSubject = async function() {
 };
 
 /* ══ DELETE SUBJECT ══ */
-window.deleteSubject = async function(id) {
-  if (!confirm('Delete this subject?')) return;
-  try {
-    var res = await fetch('/api/subjects/' + id, { method: 'DELETE' });
-    if (res.ok) { showToast('Subject deleted', 'success'); }
-    else { showToast('Failed to delete subject', 'error'); return; }
-    if (typeof loadSubjects === 'function') loadSubjects();
-    populateSubjectSelects();
-    if (typeof loadDashboardStats === 'function') loadDashboardStats();
-    if (typeof loadEduSubjects === 'function') loadEduSubjects();
-  } catch(_) { showToast('Network error', 'error'); }
+window.deleteSubject = async function(id, subjectName) {
+  SHConfirm.show({
+    type: 'danger',
+    icon: 'fa-trash',
+    title: 'Delete Subject?',
+    body: '"' + (subjectName || 'This subject') + '" will be moved to trash. You can restore it within 30 days.',
+    confirmLabel: 'Move to Trash',
+    onConfirm: async function() {
+      try {
+        var res = await fetch('/api/subjects/' + id, { method: 'DELETE' });
+        if (res.ok) {
+          if (window.SHTrash) {
+            SHTrash.addItem({ id: id, name: subjectName || 'Subject #' + id, type: 'Subject', icon: '<i class="fa-solid fa-book-open" style="color:var(--a-blue)"></i>' });
+          } else {
+            showToast('Subject deleted', 'success');
+          }
+        } else { showToast('Failed to delete subject', 'error'); return; }
+        if (typeof loadSubjects === 'function') loadSubjects();
+        populateSubjectSelects();
+        if (typeof loadDashboardStats === 'function') loadDashboardStats();
+        if (typeof loadEduSubjects === 'function') loadEduSubjects();
+      } catch(_) { showToast('Network error', 'error'); }
+    }
+  });
 };
 
 /* ══ SUBMIT SESSION ══ */
