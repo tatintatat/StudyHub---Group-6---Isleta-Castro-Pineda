@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyHub — Education</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Education page extras ── */
+.edu-tab-bar {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 5px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.edu-tab-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--txt-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t-base) var(--ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.edu-tab-btn:hover { background: var(--bg-glass); color: var(--txt-primary); }
+.edu-tab-btn.active { background: var(--a-blue); color: #fff; box-shadow: 0 4px 14px var(--glow-blue); }
+.edu-tab-panel { display: none; }
+.edu-tab-panel.active { display: block; animation: fadeInUp 0.3s var(--ease) both; }
+
+/* Timer standalone */
+.timer-standalone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  gap: 28px;
+}
+.timer-standalone .timer-circle { position: relative; }
+.timer-standalone .timer-circle svg { display: block; }
+.timer-standalone .timer-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  color: var(--txt-primary);
+  letter-spacing: -1px;
+}
+.timer-standalone .timer-label {
+  font-size: 14px;
+  color: var(--txt-secondary);
+  font-weight: 500;
+}
+.timer-standalone .timer-controls { display: flex; gap: 14px; align-items: center; }
+.timer-standalone .timer-presets { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.timer-sa-subject {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--txt-primary);
+  font-size: 13px;
+}
+.timer-sa-subject:focus { outline: none; border-color: var(--a-blue); }
+.timer-sessions-log { margin-top: 10px; width: 100%; max-width: 540px; }
+
+/* Subjects grid */
+.subjects-mgmt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.subject-mgmt-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color var(--t-base), transform var(--t-base);
+  animation: fadeInUp 0.4s var(--ease) both;
+}
+.subject-mgmt-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.subject-mgmt-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.subject-mgmt-name { flex: 1; font-weight: 600; font-size: 14px; color: var(--txt-primary); }
+.subject-mgmt-count { font-size: 11px; color: var(--txt-muted); margin-top: 2px; }
+.subject-mgmt-del {
+  width: 30px; height: 30px;
+  border: none; border-radius: 8px;
+  background: rgba(248,113,113,0.08);
+  color: var(--a-rose);
+  cursor: pointer;
+  font-size: 11px;
+  transition: background var(--t-fast);
+  flex-shrink: 0;
+}
+.subject-mgmt-del:hover { background: rgba(248,113,113,0.18); }
+
+/* Flashcard grid */
+.fc-mgmt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.fc-mgmt-card {
+  perspective: 1000px;
+  height: 160px;
+  cursor: pointer;
+  animation: fadeInUp 0.4s var(--ease) both;
+}
+.fc-mgmt-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  border-radius: var(--r-md);
+}
+.fc-mgmt-card.flipped .fc-mgmt-inner { transform: rotateY(180deg); }
+.fc-mgmt-front, .fc-mgmt-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--r-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+}
+.fc-mgmt-front { background: var(--bg-card); }
+.fc-mgmt-back  { background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(52,211,153,0.03)); transform: rotateY(180deg); }
+.fc-mgmt-icon { font-size: 20px; color: var(--a-violet); }
+.fc-mgmt-back .fc-mgmt-icon { color: var(--a-emerald); }
+.fc-mgmt-txt  { font-size: 13px; font-weight: 500; color: var(--txt-primary); line-height: 1.4; }
+.fc-mgmt-tag  { font-size: 10px; background: rgba(139,124,248,0.12); color: var(--a-violet); padding: 2px 8px; border-radius: 10px; }
+.fc-del-btn {
+  position: absolute; top: 8px; right: 8px;
+  width: 24px; height: 24px;
+  border: none; border-radius: 6px;
+  background: rgba(248,113,113,0.1);
+  color: var(--a-rose); font-size: 10px;
+  cursor: pointer; z-index: 10;
+  opacity: 0; transition: opacity var(--t-fast);
+}
+.fc-mgmt-card:hover .fc-del-btn { opacity: 1; }
+
+.fc-filter-bar {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;
+}
+.fc-filter-select {
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--txt-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .edu-tab-btn { font-size: 12px; padding: 8px 10px; }
+  .subjects-mgmt-grid { grid-template-columns: 1fr; }
+  .fc-mgmt-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .timer-standalone .timer-text { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+{% set active_page = 'education' %}
+{% include '_nav.html' %}
+{% include '_modals.html' %}
+
+<div class="main-wrap">
+  <div class="page-body active" id="view-education">
+
+    <div class="edu-page-header">
+      <div>
+        <h1 class="edu-page-title"><i class="fa-solid fa-brain"></i> Education Hub</h1>
+        <p class="edu-page-sub">Subjects, flashcards, focus timer, and AI-powered study tools — all in one place</p>
+      </div>
+      <button class="edu-upload-btn" id="edu-upload-trigger">
+        <i class="fa-solid fa-cloud-arrow-up"></i><span>Upload PPT / PDF</span>
+      </button>
+      <input type="file" id="edu-file-input" accept=".pptx,.ppt,.pdf" style="display:none;">
+    </div>
+
+    <!-- Stats row -->
+    <div class="edu-stats-row">
+      <div class="edu-stat-card edu-stat-violet">
+        <div class="edu-stat-icon"><i class="fa-solid fa-book-open"></i></div>
+        <div><div class="edu-stat-val" id="edu-stat-subjects">0</div><div class="edu-stat-lbl">Subjects</div></div>
+      </div>
+      <div class="edu-stat-card edu-stat-blue">
+        <div class="edu-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="edu-stat-val" id="edu-stat-cards">0</div><div class="edu-stat-lbl">Flashcards</div></div>
+      </div>
+      <div class="edu-stat-card edu-stat-green">
+        <div class="edu-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div><div class="edu-stat-val" id="edu-stat-mastered">0</div><div class="edu-stat-lbl">Mastered</div></div>
+      </div>
+      <div class="edu-stat-card edu-stat-amber">
+        <div class="edu-stat-icon"><i class="fa-solid fa-robot"></i></div>
+        <div><div class="edu-stat-val" id="edu-stat-ai">0</div><div class="edu-stat-lbl">AI Generated</div></div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="edu-tab-bar">
+      <button class="edu-tab-btn active" data-tab="subjects">
+        <i class="fa-solid fa-book-open"></i> Subjects
+      </button>
+      <button class="edu-tab-btn" data-tab="flashcards">
+        <i class="fa-solid fa-layer-group"></i> Flashcards
+      </button>
+      <button class="edu-tab-btn" data-tab="timer">
+        <i class="fa-solid fa-stopwatch"></i> Focus Timer
+      </button>
+      <button class="edu-tab-btn" data-tab="ai">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Generator
+      </button>
+    </div>
+
+    <!-- ── TAB: SUBJECTS ── -->
+    <div class="edu-tab-panel active" id="etab-subjects">
+      <div class="card edu-section-card">
+        <div class="edu-section-header">
+          <div class="edu-section-title"><i class="fa-solid fa-book-open"></i> My Subjects</div>
+          <button class="edu-add-btn" onclick="openSubjectModal()"><i class="fa-solid fa-plus"></i> Add Subject</button>
+        </div>
+        <div class="subjects-mgmt-grid" id="subjects-mgmt-grid">
+          <div class="edu-empty" style="grid-column:1/-1">
+            <i class="fa-solid fa-book-open"></i><p>No subjects yet</p><span>Add your first subject to get started</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: FLASHCARDS ── -->
+    <div class="edu-tab-panel" id="etab-flashcards">
+      <div class="card edu-section-card">
+        <div class="edu-section-header">
+          <div class="edu-section-title"><i class="fa-solid fa-layer-group"></i> Flashcards</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="fc-filter-bar">
+              <select class="fc-filter-select" id="fc-subject-filter"><option value="">All Subjects</option></select>
+            </div>
+            <button class="edu-add-btn" onclick="openFlashcardModal()"><i class="fa-solid fa-plus"></i> New Card</button>
+          </div>
+        </div>
+        <div class="fc-mgmt-grid" id="fc-mgmt-grid">
+          <div class="edu-empty" style="grid-column:1/-1">
+            <i class="fa-solid fa-layer-group"></i><p>No flashcards yet</p><span>Create flashcards or use the AI generator</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: TIMER ── -->
+    <div class="edu-tab-panel" id="etab-timer">
+      <div class="card" style="max-width:560px;margin:0 auto;">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-stopwatch" style="color:var(--a-violet);margin-right:8px;"></i>Focus Timer</div>
+        </div>
+        <div class="timer-standalone">
+          <div class="timer-circle">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="timerGradSA" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#8b7cf8"/>
+                  <stop offset="100%" stop-color="#22d3ee"/>
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+              <circle cx="100" cy="100" r="88" fill="none" stroke="url(#timerGradSA)" stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="553"
+                stroke-dashoffset="0"
+                transform="rotate(-90 100 100)"
+                id="sa-timer-ring"
+                style="transition:stroke-dashoffset 1s linear;"/>
+            </svg>
+            <div class="timer-text" id="sa-timer-display">25:00</div>
+          </div>
+
+          <div class="timer-label" id="sa-timer-status">Ready to focus?</div>
+
+          <div class="timer-controls">
+            <button class="timer-btn timer-btn-secondary" onclick="saResetTimer()" title="Reset">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button class="timer-btn timer-btn-play" id="sa-timer-play-btn" onclick="saToggleTimer()">
+              <i class="fa-solid fa-play" id="sa-timer-play-icon"></i>
+            </button>
+            <button class="timer-btn timer-btn-secondary" onclick="saSaveSession()" title="Save session">
+              <i class="fa-solid fa-check"></i>
+            </button>
+          </div>
+
+          <div class="timer-presets">
+            <button class="timer-preset active" data-sapreset="25" onclick="saSetPreset(25)">25 min</button>
+            <button class="timer-preset" data-sapreset="45" onclick="saSetPreset(45)">45 min</button>
+            <button class="timer-preset" data-sapreset="60" onclick="saSetPreset(60)">60 min</button>
+            <button class="timer-preset" data-sapreset="90" onclick="saSetPreset(90)">90 min</button>
+          </div>
+
+          <select class="timer-sa-subject" id="sa-timer-subject"><option value="">No subject</option></select>
+        </div>
+
+        <div style="padding:0 24px 24px;">
+          <div style="font-size:12px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Recent Sessions</div>
+          <div id="sa-sessions-log">
+            <div style="color:var(--txt-muted);font-size:13px;">No sessions yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: AI GENERATOR ── -->
+    <div class="edu-tab-panel" id="etab-ai">
+      <div class="card edu-ai-card">
+        <div class="edu-ai-header">
+          <div class="edu-ai-title">
+            <div class="edu-ai-badge"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div>
+              <div class="edu-ai-name">AI Study Generator</div>
+              <div class="edu-ai-desc">Upload a PowerPoint or PDF — AI will create quizzes or flashcards instantly</div>
+            </div>
+          </div>
+          <div class="edu-ai-status"><span class="edu-ai-dot"></span> Ready</div>
+        </div>
+
+        <div class="edu-dropzone" id="edu-dropzone">
+          <div class="edu-dropzone-inner" id="edu-dropzone-inner">
+            <div class="edu-dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div class="edu-dropzone-title">Drop your file here</div>
+            <div class="edu-dropzone-sub">Supports <strong>.pptx</strong>, <strong>.ppt</strong>, <strong>.pdf</strong></div>
+            <button class="edu-browse-btn" onclick="document.getElementById('edu-file-input').click()">Browse Files</button>
+          </div>
+          <div class="edu-file-preview" id="edu-file-preview" style="display:none;">
+            <div class="edu-file-icon-wrap"><i class="fa-solid fa-file-powerpoint" id="edu-file-icon-type"></i></div>
+            <div class="edu-file-info">
+              <div class="edu-file-name" id="edu-file-name">—</div>
+              <div class="edu-file-size" id="edu-file-size">—</div>
+            </div>
+            <button class="edu-file-remove" onclick="eduClearFile()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
+        <div class="edu-gen-options" id="edu-gen-options" style="display:none;">
+          <div class="edu-gen-label-title">What do you want to generate?</div>
+          <div class="edu-gen-type-row">
+            <label class="edu-gen-choice active" id="edu-choice-fc">
+              <input type="radio" name="edu_gen_type" value="flashcard" checked>
+              <div class="edu-choice-inner">
+                <div class="edu-choice-icon" style="background:rgba(139,124,248,0.15);color:#a78bfa"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="edu-choice-label">Flashcards</div>
+                <div class="edu-choice-sub">Q&amp;A cards for review</div>
+              </div>
+            </label>
+            <label class="edu-gen-choice" id="edu-choice-quiz">
+              <input type="radio" name="edu_gen_type" value="quiz">
+              <div class="edu-choice-inner">
+                <div class="edu-choice-icon" style="background:rgba(96,165,250,0.15);color:#60a5fa"><i class="fa-solid fa-clipboard-question"></i></div>
+                <div class="edu-choice-label">Quiz</div>
+                <div class="edu-choice-sub">Test your knowledge</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="edu-quiz-types" id="edu-quiz-types" style="display:none;">
+            <div class="edu-gen-label-title" style="font-size:12px;margin-bottom:10px;">Quiz type</div>
+            <div class="edu-quiz-chips">
+              <label class="edu-chip active"><input type="radio" name="edu_quiz_type" value="mcq" checked><span><i class="fa-solid fa-list-ul"></i> Multiple Choice</span></label>
+              <label class="edu-chip"><input type="radio" name="edu_quiz_type" value="truefalse"><span><i class="fa-solid fa-circle-half-stroke"></i> True / False</span></label>
+              <label class="edu-chip"><input type="radio" name="edu_quiz_type" value="identification"><span><i class="fa-solid fa-pen-line"></i> Identification</span></label>
+              <label class="edu-chip"><input type="radio" name="edu_quiz_type" value="mixed"><span><i class="fa-solid fa-shuffle"></i> Mixed</span></label>
+            </div>
+          </div>
+
+          <div class="edu-gen-row">
+            <div>
+              <label class="edu-field-label">Number of items</label>
+              <select class="edu-filter-select" id="edu-gen-count" style="width:100%;">
+                <option value="5">5 items</option><option value="10" selected>10 items</option>
+                <option value="15">15 items</option><option value="20">20 items</option>
+              </select>
+            </div>
+            <div>
+              <label class="edu-field-label">Save to subject</label>
+              <select class="edu-filter-select" id="edu-gen-subject" style="width:100%;"><option value="">No subject</option></select>
+            </div>
+          </div>
+
+          <button class="edu-generate-btn" id="edu-generate-btn" onclick="eduGenerate()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate with AI
+          </button>
+        </div>
+
+        <div class="edu-progress-wrap" id="edu-progress-wrap" style="display:none;">
+          <div class="edu-progress-label" id="edu-progress-label">Reading file…</div>
+          <div class="edu-progress-track"><div class="edu-progress-fill" id="edu-progress-fill"></div></div>
+          <div class="edu-progress-sub" id="edu-progress-sub">Please wait…</div>
+        </div>
+
+        <div id="edu-results-wrap" style="display:none;margin-top:20px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  window.STUDYHUB_USER = {
+    id: "{{ user.id }}", name: "{{ user.first_name or '' }} {{ user.last_name or '' }}",
+    firstName: "{{ user.first_name or '' }}", username: "{{ user.username or '' }}",
+    email: "{{ user.email or '' }}", avatar: "{{ user.profile_picture or '' }}",
+    initials: "{{ (user.first_name or 'U')[0] }}{{ (user.last_name or '')[0] }}"
+  };
+</script>
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/shared.js"></script>
+<script src="/static/js/education.js"></script>
+</body>
+</html>
