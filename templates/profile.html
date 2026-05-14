@@ -15,167 +15,277 @@
 
 <div class="main-wrap">
   <div class="page-body active">
-    <div class="profile-page-wrap">
+    <div class="fbp-wrap">
 
-      <!-- Hero card -->
-      <div class="profile-hero">
-        <div class="profile-hero-banner" id="profile-banner"></div>
-        <div class="profile-hero-body">
-          <div class="profile-ava-wrap">
-            <div class="profile-ava" id="profile-ava" onclick="document.getElementById('ava-file-input').click()">
+      <!-- ── Cover + Avatar Row ── -->
+      <div class="fbp-cover-section">
+        <div class="fbp-cover-photo" id="profile-banner"></div>
+
+        <div class="fbp-identity-row">
+          <!-- Avatar -->
+          <div class="fbp-ava-wrap">
+            <div class="fbp-ava" id="profile-ava" onclick="document.getElementById('ava-file-input').click()">
               {% if user.profile_picture %}
                 <img src="{{ user.profile_picture }}" alt="">
               {% else %}
                 {{ (user.first_name or "U")[0] }}{{ (user.last_name or "")[0] }}
               {% endif %}
             </div>
-            <div class="profile-ava-overlay" onclick="document.getElementById('ava-file-input').click()">
+            <div class="fbp-ava-overlay" onclick="document.getElementById('ava-file-input').click()">
               <i class="fa-solid fa-camera"></i>
-              <span>Change Photo</span>
             </div>
             <input type="file" id="ava-file-input" accept="image/*" style="display:none;">
           </div>
-          <div class="profile-info">
-            <div class="profile-name" id="profile-name">{{ user.first_name or "" }} {{ user.last_name or "" }}</div>
-            <div class="profile-handle" id="profile-handle">@{{ user.username or "" }}</div>
-            <div class="profile-bio" id="profile-bio">StudyHub member · learning every day</div>
-            <div class="profile-counters">
-              <div class="profile-counter"><div class="profile-counter-val" id="pc-posts">0</div><div class="profile-counter-lbl">Posts</div></div>
-              <div class="profile-counter"><div class="profile-counter-val" id="pc-followers">0</div><div class="profile-counter-lbl">Followers</div></div>
-              <div class="profile-counter"><div class="profile-counter-val" id="pc-following">0</div><div class="profile-counter-lbl">Following</div></div>
-              <div class="profile-counter"><div class="profile-counter-val" id="pc-streak">1</div><div class="profile-counter-lbl">Day streak</div></div>
+
+          <!-- Name + stats -->
+          <div class="fbp-identity-info">
+            <h1 class="fbp-name" id="profile-name">{{ user.first_name or "" }} {{ user.last_name or "" }}</h1>
+            <div class="fbp-sub">
+              <span><strong id="pc-followers">0</strong> followers</span>
+              <span class="fbp-dot">·</span>
+              <span><strong id="pc-following">0</strong> following</span>
             </div>
+            <div class="fbp-handle" id="profile-handle">@{{ user.username or "" }}</div>
           </div>
-          <div class="profile-actions">
-            <button class="btn btn-primary" onclick="openEditProfileModal()">
+
+          <!-- Action buttons -->
+          <div class="fbp-actions">
+            <button class="btn fbp-btn-primary" onclick="openEditProfileModal()">
               <i class="fa-solid fa-pen" style="margin-right:6px;"></i>Edit Profile
             </button>
-            <button class="btn btn-secondary" onclick="openSessionModal()">
+            <button class="btn fbp-btn-secondary" onclick="openSessionModal()">
               <i class="fa-solid fa-clock" style="margin-right:6px;"></i>Log Session
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="profile-tabs-bar">
-        <button class="profile-tab-btn active" data-tab="posts">
-          <i class="fa-solid fa-file-lines"></i> Posts
-        </button>
-        <button class="profile-tab-btn" data-tab="about">
-          <i class="fa-solid fa-circle-info"></i> About
-        </button>
-        <button class="profile-tab-btn" data-tab="activity">
-          <i class="fa-solid fa-chart-line"></i> Activity
-        </button>
-        <button class="profile-tab-btn" data-tab="settings">
-          <i class="fa-solid fa-gear"></i> Settings
-        </button>
-      </div>
-
-      <!-- Posts tab -->
-      <div class="profile-tab-panel active" id="ptab-posts">
-        <div class="profile-posts-grid" id="profile-posts-list">
-          <div class="empty-state" style="padding:3rem 0">
-            <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
-            <div>Loading posts…</div>
+      <!-- ── Facebook-style Tabs ── -->
+      <div class="fbp-tabs-bar">
+        <div class="fbp-tabs-left">
+          <button class="fbp-tab active" data-tab="posts">
+            <i class="fa-solid fa-table-cells-large"></i> All
+          </button>
+          <button class="fbp-tab" data-tab="about">
+            <i class="fa-solid fa-circle-info"></i> About
+          </button>
+          <button class="fbp-tab" data-tab="activity">
+            <i class="fa-solid fa-chart-line"></i> Activity
+          </button>
+          <button class="fbp-tab" data-tab="settings">
+            <i class="fa-solid fa-gear"></i> Settings
+          </button>
+        </div>
+        <div class="fbp-tabs-right">
+          <div class="fbp-streak-pill">
+            <i class="fa-solid fa-fire"></i>
+            <span id="pc-streak">1</span> day streak
           </div>
         </div>
       </div>
 
-      <!-- About tab -->
-      <div class="profile-tab-panel" id="ptab-about">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Account Info</div>
-            <button class="card-action" onclick="openEditProfileModal()">Edit</button>
-          </div>
-          <div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Full name</span><span class="mini-stat-val" id="about-fullname">{{ user.first_name or "" }} {{ user.last_name or "" }}</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Username</span><span class="mini-stat-val" id="about-uname">@{{ user.username or "" }}</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Email</span><span class="mini-stat-val" style="font-size:12px;font-weight:400;">{{ user.email or "" }}</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Auth method</span><span class="mini-stat-val">{{ user.auth_provider | upper }}</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Member since</span><span class="mini-stat-val" id="about-since">—</span></div>
-          </div>
-        </div>
+      <!-- ── Body: two-column layout ── -->
+      <div class="fbp-body">
 
-        <div class="card" style="margin-top:16px;">
-          <div class="card-header">
-            <div class="card-title">Study Stats</div>
-          </div>
-          <div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Total study time</span><span class="mini-stat-val" id="about-hours">0h</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Subjects</span><span class="mini-stat-val" id="about-subjects">0</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Flashcards</span><span class="mini-stat-val" id="about-flashcards">0</span></div>
-            <div class="mini-stat-row"><span class="mini-stat-label">Current streak</span><span class="mini-stat-val" id="about-streak">1 day</span></div>
-          </div>
-        </div>
-      </div>
+        <!-- LEFT SIDEBAR -->
+        <div class="fbp-sidebar">
 
-      <!-- Activity tab -->
-      <div class="profile-tab-panel" id="ptab-activity">
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-header">
-            <div class="card-title">Study Activity — Last 30 Days</div>
-          </div>
-          <div id="profile-heatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:14px 20px;"></div>
-          <div style="display:flex;gap:8px;align-items:center;padding:0 20px 14px;font-size:11px;color:var(--txt-muted);">
-            <span>Less</span>
-            <div style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid var(--border)"></div>
-            <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.2)"></div>
-            <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.5)"></div>
-            <div style="width:12px;height:12px;border-radius:3px;background:rgba(139,124,248,0.85)"></div>
-            <span>More</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Recent Sessions</div></div>
-          <div id="profile-sessions-log">
-            <div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i><div>Loading…</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings tab -->
-      <div class="profile-tab-panel" id="ptab-settings">
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-header"><div class="card-title">Appearance</div></div>
-          <div class="mini-stat-row" style="cursor:pointer;" onclick="document.getElementById('theme-btn').click()">
-            <span class="mini-stat-label"><i class="fa-solid fa-moon" style="margin-right:8px;color:var(--a-blue);"></i>Dark Mode</span>
-            <span class="mini-stat-val" id="settings-theme-label">Dark</span>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-header"><div class="card-title">Edit Profile</div></div>
-          <div style="padding:0 4px 4px;">
-            <div class="form-group">
-              <label class="form-label">First Name</label>
-              <input type="text" class="form-input" id="settings-first" value="{{ user.first_name or '' }}">
+          <!-- Intro card -->
+          <div class="fbp-card">
+            <div class="fbp-card-title">Intro</div>
+            <div class="fbp-intro-row">
+              <i class="fa-solid fa-user"></i>
+              <span id="about-fullname">{{ user.first_name or "" }} {{ user.last_name or "" }}</span>
             </div>
-            <div class="form-group">
-              <label class="form-label">Last Name</label>
-              <input type="text" class="form-input" id="settings-last" value="{{ user.last_name or '' }}">
+            <div class="fbp-intro-row">
+              <i class="fa-solid fa-at"></i>
+              <span id="about-uname">@{{ user.username or "" }}</span>
             </div>
-            <div class="form-group">
-              <label class="form-label">Username</label>
-              <input type="text" class="form-input" id="settings-username" value="{{ user.username or '' }}">
+            <div class="fbp-intro-row">
+              <i class="fa-solid fa-envelope"></i>
+              <span style="font-size:12px;">{{ user.email or "" }}</span>
             </div>
-            <button class="btn btn-primary" style="margin-top:4px;" onclick="settingsSave()">
-              <i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Save Changes
+            <div class="fbp-intro-row">
+              <i class="fa-solid fa-shield"></i>
+              <span>{{ user.auth_provider | upper }}</span>
+            </div>
+            <div class="fbp-intro-row">
+              <i class="fa-solid fa-calendar"></i>
+              <span>Joined <span id="about-since">—</span></span>
+            </div>
+            <button class="fbp-edit-details-btn" onclick="openEditProfileModal()">
+              Edit details
             </button>
           </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Danger Zone</div></div>
-          <div style="padding:0 4px 4px;">
-            <button class="btn" style="background:rgba(248,113,113,.1);color:var(--a-rose);border:1px solid rgba(248,113,113,.25);" onclick="signOut()">
-              <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:6px;"></i>Sign Out
-            </button>
+
+          <!-- Study stats card -->
+          <div class="fbp-card" style="margin-top:12px;">
+            <div class="fbp-card-title">Study Stats</div>
+            <div class="fbp-stat-grid">
+              <div class="fbp-stat-box">
+                <div class="fbp-stat-val" id="about-hours">0h</div>
+                <div class="fbp-stat-lbl">Study Time</div>
+              </div>
+              <div class="fbp-stat-box">
+                <div class="fbp-stat-val" id="about-subjects">0</div>
+                <div class="fbp-stat-lbl">Subjects</div>
+              </div>
+              <div class="fbp-stat-box">
+                <div class="fbp-stat-val" id="about-flashcards">0</div>
+                <div class="fbp-stat-lbl">Flashcards</div>
+              </div>
+              <div class="fbp-stat-box">
+                <div class="fbp-stat-val" id="about-streak">1</div>
+                <div class="fbp-stat-lbl">Day Streak</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent sessions (like Highlights) -->
+          <div class="fbp-card" style="margin-top:12px;">
+            <div class="fbp-card-title-row">
+              <span class="fbp-card-title">Recent Sessions</span>
+              <button class="fbp-card-action" onclick="document.querySelector('[data-tab=activity]').click()">See all</button>
+            </div>
+            <div id="fbp-sidebar-sessions">
+              <div style="padding:12px 0;text-align:center;color:var(--txt-muted);font-size:13px;">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-    </div>
+        <!-- RIGHT MAIN CONTENT -->
+        <div class="fbp-main">
+
+          <!-- Posts tab panel -->
+          <div class="fbp-tab-panel active" id="ptab-posts">
+            <!-- Create post box -->
+            <div class="fbp-create-post-box">
+              <div class="fbp-create-row">
+                <div class="fbp-create-ava" id="create-ava-mini">
+                  {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture }}" alt="">
+                  {% else %}
+                    {{ (user.first_name or "U")[0] }}{{ (user.last_name or "")[0] }}
+                  {% endif %}
+                </div>
+                <button class="fbp-create-prompt" onclick="document.querySelector('[href=\'/community\']')?.click()">
+                  What's on your mind, {{ user.first_name or 'there' }}?
+                </button>
+              </div>
+              <div class="fbp-create-divider"></div>
+              <div class="fbp-create-actions">
+                <a href="/community" class="fbp-create-action">
+                  <i class="fa-solid fa-photo-film" style="color:#45bd62;"></i> Photo/Post
+                </a>
+                <button class="fbp-create-action" onclick="openSessionModal()">
+                  <i class="fa-solid fa-clock" style="color:#f7b928;"></i> Log Session
+                </button>
+                <a href="/flashcards" class="fbp-create-action">
+                  <i class="fa-solid fa-layer-group" style="color:#f3425f;"></i> Flashcard
+                </a>
+              </div>
+            </div>
+
+            <!-- Posts filter row -->
+            <div class="fbp-posts-header">
+              <span class="fbp-posts-title">Posts</span>
+              <div class="fbp-posts-filter">
+                <button class="fbp-filter-btn active">
+                  <i class="fa-solid fa-bars-staggered"></i> List view
+                </button>
+              </div>
+            </div>
+
+            <!-- Posts list -->
+            <div id="profile-posts-list">
+              <div class="empty-state" style="padding:3rem 0">
+                <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
+                <div>Loading posts…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- About tab panel -->
+          <div class="fbp-tab-panel" id="ptab-about">
+            <div class="fbp-card">
+              <div class="fbp-card-title">Account Info</div>
+              <div class="mini-stat-row"><span class="mini-stat-label">Full name</span><span class="mini-stat-val" id="about-fullname2">{{ user.first_name or "" }} {{ user.last_name or "" }}</span></div>
+              <div class="mini-stat-row"><span class="mini-stat-label">Username</span><span class="mini-stat-val">@{{ user.username or "" }}</span></div>
+              <div class="mini-stat-row"><span class="mini-stat-label">Email</span><span class="mini-stat-val" style="font-size:12px;font-weight:400;">{{ user.email or "" }}</span></div>
+              <div class="mini-stat-row"><span class="mini-stat-label">Auth method</span><span class="mini-stat-val">{{ user.auth_provider | upper }}</span></div>
+              <div class="mini-stat-row"><span class="mini-stat-label">Member since</span><span class="mini-stat-val" id="about-since2">—</span></div>
+            </div>
+          </div>
+
+          <!-- Activity tab panel -->
+          <div class="fbp-tab-panel" id="ptab-activity">
+            <div class="fbp-card" style="margin-bottom:16px;">
+              <div class="fbp-card-title">Study Activity — Last 30 Days</div>
+              <div id="profile-heatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:14px 20px;"></div>
+              <div style="display:flex;gap:8px;align-items:center;padding:0 20px 14px;font-size:11px;color:var(--txt-muted);">
+                <span>Less</span>
+                <div style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid var(--border)"></div>
+                <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.2)"></div>
+                <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.5)"></div>
+                <div style="width:12px;height:12px;border-radius:3px;background:rgba(59,158,255,0.85)"></div>
+                <span>More</span>
+              </div>
+            </div>
+            <div class="fbp-card">
+              <div class="fbp-card-title">Recent Sessions</div>
+              <div id="profile-sessions-log">
+                <div class="empty-state" style="padding:2rem 0">
+                  <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
+                  <div>Loading…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings tab panel -->
+          <div class="fbp-tab-panel" id="ptab-settings">
+            <div class="fbp-card" style="margin-bottom:12px;">
+              <div class="fbp-card-title">Appearance</div>
+              <div class="mini-stat-row" style="cursor:pointer;" onclick="document.getElementById('theme-btn').click()">
+                <span class="mini-stat-label"><i class="fa-solid fa-moon" style="margin-right:8px;color:var(--a-blue);"></i>Dark Mode</span>
+                <span class="mini-stat-val" id="settings-theme-label">Dark</span>
+              </div>
+            </div>
+            <div class="fbp-card" style="margin-bottom:12px;">
+              <div class="fbp-card-title">Edit Profile</div>
+              <div style="padding:4px 0;">
+                <div class="form-group">
+                  <label class="form-label">First Name</label>
+                  <input type="text" class="form-input" id="settings-first" value="{{ user.first_name or '' }}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" class="form-input" id="settings-last" value="{{ user.last_name or '' }}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Username</label>
+                  <input type="text" class="form-input" id="settings-username" value="{{ user.username or '' }}">
+                </div>
+                <button class="btn btn-primary" style="margin-top:4px;" onclick="settingsSave()">
+                  <i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Save Changes
+                </button>
+              </div>
+            </div>
+            <div class="fbp-card">
+              <div class="fbp-card-title">Danger Zone</div>
+              <div style="padding:4px 0;">
+                <button class="btn" style="background:rgba(248,113,113,.1);color:var(--a-rose);border:1px solid rgba(248,113,113,.25);" onclick="signOut()">
+                  <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:6px;"></i>Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /fbp-main -->
+      </div><!-- /fbp-body -->
+    </div><!-- /fbp-wrap -->
   </div>
 </div>
 

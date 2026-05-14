@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyHub — Messages</title>
+
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+{% set active_page = 'messages' %}
+{% include '_nav.html' %}
+{% include '_modals.html' %}
+
+<div class="main-wrap">
+  <div class="msg-layout" id="msgLayout">
+
+    <aside class="msg-sidebar" id="msgSidebar">
+      <div class="msg-sidebar-head">
+        <h1 class="msg-sidebar-title">Chats</h1>
+
+        <div class="msg-sidebar-icons">
+          <button class="msg-icon-btn" id="newMsgBtn" title="New Message">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="msg-search-wrap">
+        <i class="fa-solid fa-magnifying-glass msg-search-icon"></i>
+        <input
+          type="text"
+          class="msg-search-input"
+          id="convSearchInput"
+          placeholder="Search Messenger"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="msg-filter-tabs">
+        <button class="msg-filter-tab active" data-filter="all">All</button>
+        <button class="msg-filter-tab" data-filter="unread">Unread</button>
+      </div>
+
+      <div class="msg-conv-list" id="convList">
+        <div class="msg-loading" id="convLoading">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </div>
+      </div>
+    </aside>
+
+    <section class="msg-chat-area" id="msgChatArea">
+
+      <div class="msg-empty-chat" id="msgEmptyState">
+        <div class="msg-empty-icon">
+          <i class="fa-solid fa-comments"></i>
+        </div>
+
+        <div class="msg-empty-title">Your Messages</div>
+
+        <p class="msg-empty-sub">
+          Send private notes and messages to a friend or study group.
+        </p>
+
+        <button class="btn btn-primary" style="margin-top:8px;" id="emptyNewMsgBtn">
+          <i class="fa-solid fa-pen-to-square"></i>&nbsp; New Message
+        </button>
+      </div>
+
+      <div class="msg-chat-inner" id="msgChatInner" style="display:none;flex-direction:column;height:100%;">
+
+        <div class="msg-chat-header" id="msgChatHeader">
+          <button class="msg-back-btn" id="msgBackBtn" title="Back">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+
+          <div class="msg-chat-header-ava" id="chatHeaderAva">
+            <span id="chatHeaderInitials">?</span>
+          </div>
+
+          <div class="msg-chat-header-info">
+            <div class="msg-chat-header-name" id="chatHeaderName">—</div>
+            <div class="msg-chat-header-status">
+              <span class="msg-online-dot" id="chatOnlineDot" style="display:none;"></span>
+              <span id="chatStatusText">Offline</span>
+            </div>
+          </div>
+
+          <div class="msg-chat-header-actions">
+            <button class="msg-icon-btn" title="Voice call">
+              <i class="fa-solid fa-phone"></i>
+            </button>
+
+            <button class="msg-icon-btn" title="Video call">
+              <i class="fa-solid fa-video"></i>
+            </button>
+
+            <button class="msg-icon-btn" title="More options" id="chatMoreBtn">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="msg-bubbles" id="msgBubbles"></div>
+
+        <div class="msg-input-bar">
+          <button class="msg-icon-btn" title="Attach file">
+            <i class="fa-solid fa-paperclip"></i>
+          </button>
+
+          <div class="msg-input-wrap">
+            <input
+              type="text"
+              class="msg-input"
+              id="msgInput"
+              placeholder="Write a message…"
+              autocomplete="off"
+            >
+          </div>
+
+          <button class="msg-icon-btn" title="Emoji">
+            <i class="fa-regular fa-face-smile"></i>
+          </button>
+
+          <button class="msg-send-btn" id="msgSendBtn" title="Send">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="nm-overlay" id="newMsgOverlay">
+  <div class="nm-modal" id="newMsgModal">
+
+    <div class="nm-header">
+      <div class="nm-header-left">
+        <div class="nm-header-icon">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+
+        <div>
+          <div class="nm-title">New Message</div>
+          <div class="nm-subtitle">Start a private conversation</div>
+        </div>
+      </div>
+
+      <button class="nm-close-btn" id="newMsgClose" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="nm-to-wrap">
+      <div class="nm-to-label">To:</div>
+
+      <div class="nm-to-chips" id="nmChips">
+        <input
+          type="text"
+          class="nm-to-input"
+          id="nmSearchInput"
+          placeholder="Search people by name or @handle…"
+          autocomplete="off"
+        >
+      </div>
+    </div>
+
+    <div class="nm-results-wrap open" id="nmResultsWrap">
+      <div class="nm-results-header" id="nmResultsHeader">Search users</div>
+      <div class="nm-results-list" id="nmResultsList"></div>
+
+      <div class="nm-no-results" id="nmNoResults" style="display:none;">
+        <i class="fa-solid fa-user-slash"></i>
+        <span>No users found</span>
+      </div>
+    </div>
+
+    <div class="nm-compose-area">
+      <textarea
+        class="nm-compose-input"
+        id="nmComposeInput"
+        placeholder="Write a message…"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="nm-footer">
+      <button class="nm-cancel-btn" id="nmCancelBtn">Cancel</button>
+
+      <button class="nm-send-btn" id="nmSendBtn" disabled>
+        <i class="fa-solid fa-paper-plane"></i>
+        Send Message
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  window.STUDYHUB_USER = {
+    id: "{{ user.id }}",
+    name: "{{ user.first_name or '' }} {{ user.last_name or '' }}",
+    firstName: "{{ user.first_name or '' }}",
+    username: "{{ user.username or '' }}",
+    email: "{{ user.email or '' }}",
+    avatar: "{{ user.profile_picture or '' }}",
+    initials: "{{ (user.first_name or 'U')[0] }}{{ (user.last_name or '')[0] }}"
+  };
+</script>
+
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/shared.js"></script>
+<script src="/static/js/message.js"></script>
+
+</body>
+</html>

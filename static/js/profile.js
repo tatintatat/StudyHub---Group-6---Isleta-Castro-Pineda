@@ -1,11 +1,10 @@
-/* ── StudyHub · Profile Page ── */
 'use strict';
 
 /* ── TAB SWITCHING ── */
-document.querySelectorAll('.profile-tab-btn').forEach(function(btn) {
+document.querySelectorAll('.fbp-tab').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.profile-tab-btn').forEach(function(b) { b.classList.remove('active'); });
-    document.querySelectorAll('.profile-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.fbp-tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.fbp-tab-panel').forEach(function(p) { p.classList.remove('active'); });
     btn.classList.add('active');
     var panel = document.getElementById('ptab-' + btn.dataset.tab);
     if (panel) panel.classList.add('active');
@@ -20,7 +19,6 @@ document.getElementById('ava-file-input').addEventListener('change', async funct
   if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
   if (file.size > 10 * 1024 * 1024) { showToast('Image must be under 10MB', 'error'); return; }
 
-  // Compress via canvas before uploading (keeps payload small)
   function compressImage(file, maxW, quality, cb) {
     var img = new Image();
     var url = URL.createObjectURL(file);
@@ -49,10 +47,13 @@ document.getElementById('ava-file-input').addEventListener('change', async funct
       var data = {};
       try { data = await res.json(); } catch(_) {}
       if (res.ok) {
+        var imgTag = '<img src="' + (data.url || dataUrl) + '" alt="">';
         var avaEl = document.getElementById('profile-ava');
-        avaEl.innerHTML = '<img src="' + (data.url || dataUrl) + '" alt="">';
+        if (avaEl) avaEl.innerHTML = imgTag;
+        var miniAva = document.getElementById('create-ava-mini');
+        if (miniAva) miniAva.innerHTML = imgTag;
         var navAva = document.getElementById('nav-user-ava');
-        if (navAva) navAva.innerHTML = '<img src="' + (data.url || dataUrl) + '" alt="">';
+        if (navAva) navAva.innerHTML = imgTag;
         showToast('Profile picture updated!', 'success');
       } else {
         showToast(data.error || 'Failed to upload image', 'error');
@@ -74,9 +75,13 @@ async function loadMyPosts() {
       container.innerHTML = '<div class="empty-state" style="padding:3rem 0"><i class="fa-solid fa-pen-to-square empty-icon-fa"></i><div>No posts yet</div><div class="empty-sub"><a href="/community" style="color:var(--a-blue);">Share something with the community</a></div></div>';
       return;
     }
-    var getTopicClass = function(t) { return { General:'topic-general',Math:'topic-math',Science:'topic-science',Notes:'topic-notes','Help Needed':'topic-help' }[t] || 'topic-general'; };
+    var getTopicClass = function(t) {
+      return { General:'topic-general',Math:'topic-math',Science:'topic-science',Notes:'topic-notes','Help Needed':'topic-help' }[t] || 'topic-general';
+    };
     container.innerHTML = posts.map(function(p) {
-      var av = p.profile_picture ? '<img src="' + p.profile_picture + '" class="post-avatar">' : '<div class="post-avatar-initials">' + (p.first_name ? p.first_name[0] : 'U') + (p.last_name ? p.last_name[0] : '') + ' </div>';
+      var av = p.profile_picture
+        ? '<img src="' + p.profile_picture + '" class="post-avatar">'
+        : '<div class="post-avatar-initials">' + (p.first_name ? p.first_name[0] : 'U') + (p.last_name ? p.last_name[0] : '') + '</div>';
       return '<div class="post-card">' +
         '<div class="post-header">' + av +
         '<div class="post-meta"><div class="post-author">' + escapeHtml(p.first_name + ' ' + p.last_name) + '</div>' +
@@ -100,9 +105,11 @@ async function loadProfileStats() {
     var stats = await res.json();
     var set   = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
     set('pc-streak', stats.streak || 1);
-    var since = stats.member_since ? new Date(stats.member_since).toLocaleDateString('en-US', { month:'long', year:'numeric' }) : '—';
+    var since = stats.member_since
+      ? new Date(stats.member_since).toLocaleDateString('en-US', { month:'long', year:'numeric' })
+      : '—';
     set('about-since', since);
-    /* followers/following from /api/users/<username> */
+    set('about-since2', since);
     var u = window.STUDYHUB_USER || {};
     if (u.username) {
       var ures = await fetch('/api/users/' + encodeURIComponent(u.username));
@@ -119,13 +126,39 @@ async function loadAboutStats() {
     var res   = await fetch('/api/stats');
     var stats = await res.json();
     var set   = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
-    set('about-hours',     (stats.study_hours || 0) + 'h');
-    set('about-subjects',  stats.subjects    || 0);
-    set('about-flashcards',stats.flashcards  || 0);
+    set('about-hours',      (stats.study_hours || 0) + 'h');
+    set('about-subjects',   stats.subjects    || 0);
+    set('about-flashcards', stats.flashcards  || 0);
     var sv = stats.streak || 1;
-    set('about-streak', sv + ' day' + (sv !== 1 ? 's' : ''));
-    var since = stats.member_since ? new Date(stats.member_since).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }) : '—';
+    set('about-streak', sv);
+    var since = stats.member_since
+      ? new Date(stats.member_since).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' })
+      : '—';
     set('about-since', since);
+    set('about-since2', since);
+  } catch(_) {}
+}
+
+/* ── SIDEBAR SESSIONS (mini list) ── */
+async function loadSidebarSessions() {
+  var el = document.getElementById('fbp-sidebar-sessions'); if (!el) return;
+  try {
+    var res = await fetch('/api/sessions');
+    var sessions = await res.json();
+    if (!sessions || !sessions.length) {
+      el.innerHTML = '<div style="padding:8px 0;font-size:13px;color:var(--txt-muted);">No sessions yet.</div>';
+      return;
+    }
+    el.innerHTML = sessions.slice(0, 5).map(function(s) {
+      var color = s.subject_color || '#3b9eff';
+      var name  = s.subject_name  || 'General';
+      var h = Math.floor(s.duration_minutes / 60), m = s.duration_minutes % 60;
+      var t = h > 0 ? h + 'h ' + m + 'm' : m + ' min';
+      return '<div class="fbp-session-item">' +
+        '<div class="fbp-session-dot" style="background:' + color + '"></div>' +
+        '<span class="fbp-session-name">' + escapeHtml(name) + '</span>' +
+        '<span class="fbp-session-dur">' + t + '</span></div>';
+    }).join('');
   } catch(_) {}
 }
 
@@ -145,8 +178,8 @@ function renderHeatmapEl(el, data) {
     var d = new Date(); d.setDate(d.getDate() - i);
     var key = d.toISOString().split('T')[0], mins = data[key] || 0;
     var isToday = (i === 0);
-    var bg = mins > 90 ? 'rgba(139,124,248,0.85)' : mins > 60 ? 'rgba(139,124,248,0.6)' : mins > 30 ? 'rgba(139,124,248,0.4)' : mins > 0 ? 'rgba(139,124,248,0.2)' : 'rgba(255,255,255,0.04)';
-    var border = isToday ? 'border:1.5px solid var(--a-violet);box-shadow:0 0 0 1.5px var(--a-violet);' : 'border:1px solid rgba(255,255,255,0.06);';
+    var bg = mins > 90 ? 'rgba(59,158,255,0.85)' : mins > 60 ? 'rgba(59,158,255,0.6)' : mins > 30 ? 'rgba(59,158,255,0.4)' : mins > 0 ? 'rgba(59,158,255,0.2)' : 'rgba(255,255,255,0.04)';
+    var border = isToday ? 'border:1.5px solid var(--a-blue);box-shadow:0 0 0 1.5px var(--a-blue);' : 'border:1px solid rgba(255,255,255,0.06);';
     cells.push('<div class="heatmap-cell" style="background:' + bg + ';' + border + '" title="' + d.toDateString() + ': ' + mins + ' min"></div>');
   }
   var rem = 30 % 7;
@@ -154,7 +187,7 @@ function renderHeatmapEl(el, data) {
   el.innerHTML = cells.join('');
 }
 
-/* ── SESSIONS ── */
+/* ── SESSIONS (activity tab) ── */
 async function loadProfileSessions() {
   var el = document.getElementById('profile-sessions-log'); if (!el) return;
   try {
@@ -165,7 +198,7 @@ async function loadProfileSessions() {
       return;
     }
     el.innerHTML = '<div class="log-list">' + sessions.slice(0, 10).map(function(s) {
-      var color = s.subject_color || '#8b7cf8';
+      var color = s.subject_color || '#3b9eff';
       var name  = s.subject_name  || 'General';
       var date  = new Date(s.session_date).toLocaleDateString('en-US', { month:'short', day:'numeric' });
       var h = Math.floor(s.duration_minutes / 60), m = s.duration_minutes % 60;
@@ -191,10 +224,12 @@ window.settingsSave = async function() {
     });
     if (res.ok) {
       showToast('Profile updated!', 'success');
-      document.getElementById('profile-name').textContent   = firstName + ' ' + lastName;
-      document.getElementById('profile-handle').textContent = '@' + username;
-      document.getElementById('about-fullname').textContent = firstName + ' ' + lastName;
-      document.getElementById('about-uname').textContent    = '@' + username;
+      var set = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+      set('profile-name', firstName + ' ' + lastName);
+      set('profile-handle', '@' + username);
+      set('about-fullname', firstName + ' ' + lastName);
+      set('about-fullname2', firstName + ' ' + lastName);
+      set('about-uname', '@' + username);
       var navName = document.querySelector('.nav-user-name');
       if (navName) navName.textContent = firstName;
       window.STUDYHUB_USER.name = firstName + ' ' + lastName;
@@ -217,7 +252,7 @@ updateThemeLabel();
 var themeBtn = document.getElementById('theme-btn');
 if (themeBtn) themeBtn.addEventListener('click', function() { setTimeout(updateThemeLabel, 50); });
 
-/* ── SIGN OUT (with confirmation) ── */
+/* ── SIGN OUT ── */
 window.signOut = async function() {
   SHConfirm.show({
     type: 'warning',
@@ -234,13 +269,14 @@ window.signOut = async function() {
 
 window.renderProfileUI = function() {
   var u = window.STUDYHUB_USER || {};
-  var nameEl = document.getElementById('profile-name');
-  var handleEl = document.getElementById('profile-handle');
-  if (nameEl) nameEl.textContent = u.name || '';
-  if (handleEl) handleEl.textContent = '@' + (u.username || '');
+  var set = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+  set('profile-name', u.name || '');
+  set('profile-handle', '@' + (u.username || ''));
 };
 
 /* ── INIT ── */
 loadMyPosts();
 loadProfileStats();
+loadAboutStats();
+loadSidebarSessions();
 populateSubjectSelects();

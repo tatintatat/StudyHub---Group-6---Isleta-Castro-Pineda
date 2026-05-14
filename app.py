@@ -232,6 +232,24 @@ def profile():
     return render_template("profile.html", user=user)
 
 
+# ══════════════════════════════════════════
+# MESSAGES PAGE
+# ══════════════════════════════════════════
+
+@app.route("/messages")
+@login_required_page
+def messages():
+    user = query_one(
+        "SELECT * FROM users WHERE id = %s",
+        (session["user_id"],)
+    )
+
+    if not user:
+        session.clear()
+        return redirect(url_for("index"))
+
+    return render_template("messages.html", user=user)
+
 # ── Auth API ────────────────────────────────────────────────────────────────
 
 @app.route("/api/signup", methods=["POST"])
