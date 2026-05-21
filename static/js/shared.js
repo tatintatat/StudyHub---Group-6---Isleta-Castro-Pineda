@@ -326,77 +326,97 @@ window.submitEditProfile = async function() {
   finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
 };
 
-/* ══ USER PROFILE MODAL ══ */
-window.viewUserProfile = async function(username) {
-  try {
-    var res = await fetch('/api/users/' + encodeURIComponent(username));
-    if (!res.ok) { showToast('User not found', 'error'); return; }
-    var user = await res.json();
-    document.getElementById('upm-ava').innerHTML = user.profile_picture
-      ? '<img src="' + user.profile_picture + '" alt="">'
-      : '<span>' + (user.first_name ? user.first_name[0] : 'U') + (user.last_name ? user.last_name[0] : '') + '</span>';
-    document.getElementById('upm-name').textContent    = user.first_name + ' ' + user.last_name;
-    document.getElementById('upm-handle').textContent  = '@' + user.username;
-    document.getElementById('upm-posts').textContent   = user.post_count || 0;
-    document.getElementById('upm-followers').textContent = user.follower_count || 0;
-    document.getElementById('upm-following').textContent = user.following_count || 0;
-    var followBtn = document.getElementById('upm-follow-btn');
-    followBtn.textContent = user.is_following ? 'Following' : 'Follow';
-    followBtn.classList.toggle('following-state', !!user.is_following);
-    followBtn.onclick = function() { window.toggleFollow(username); };
-    var postsRes = await fetch('/api/posts?filter=user&user=' + encodeURIComponent(username));
-    var posts = await postsRes.json();
-    renderUserModalPosts(posts);
-    document.getElementById('user-profile-modal').classList.add('active');
-  } catch(_) { showToast('Failed to load user profile', 'error'); }
-};
+/* ══ USER PROFILE MODAL ══
+   NOTE: viewUserProfile, sendMessage, toggleFollow are defined in community.js
+   for the community page. This shared.js stub is intentionally left empty so
+   community.js (loaded after shared.js) provides the authoritative versions.
+   For other pages that include shared.js without community.js, provide fallbacks. */
+if (typeof window.viewUserProfile === 'undefined') {
+  window.viewUserProfile = async function(username) {
+    try {
+      var res = await fetch('/api/users/' + encodeURIComponent(username));
+      if (!res.ok) { showToast('User not found', 'error'); return; }
+      var user = await res.json();
+      var modal = document.getElementById('user-profile-modal');
+      if (!modal) { showToast('Profile modal not available', 'info'); return; }
+      var avaEl = document.getElementById('legacy-upm-ava');
+      if (avaEl) avaEl.innerHTML = user.profile_picture
+        ? '<img src="' + user.profile_picture + '" alt="">'
+        : '<span>' + (user.first_name ? user.first_name[0] : 'U') + (user.last_name ? user.last_name[0] : '') + '</span>';
+      var nameEl = document.getElementById('legacy-upm-name');
+      if (nameEl) nameEl.textContent = user.first_name + ' ' + user.last_name;
+      var handleEl = document.getElementById('legacy-upm-handle');
+      if (handleEl) handleEl.textContent = '@' + user.username;
+      var postsEl = document.getElementById('legacy-upm-posts');
+      if (postsEl) postsEl.textContent = user.posts_count || 0;
+      var followersEl = document.getElementById('legacy-upm-followers');
+      if (followersEl) followersEl.textContent = user.followers_count || 0;
+      var followingEl = document.getElementById('legacy-upm-following');
+      if (followingEl) followingEl.textContent = user.following_count || 0;
+      var followBtn = document.getElementById('legacy-upm-follow-btn');
+      if (followBtn) {
+        followBtn.textContent = user.is_following ? 'Following' : 'Follow';
+        followBtn.classList.toggle('following-state', !!user.is_following);
+        followBtn.onclick = function() { window.toggleFollow(username); };
+      }
+      modal.classList.add('active');
+    } catch(_) { showToast('Failed to load user profile', 'error'); }
+  };
+}
 
-window.toggleFollow = async function(username) {
-  try {
-    var res  = await fetch('/api/users/' + encodeURIComponent(username) + '/follow', { method: 'POST' });
-    var data = await res.json();
-    var btn  = document.getElementById('upm-follow-btn');
-    btn.textContent = data.following ? 'Following' : 'Follow';
-    btn.classList.toggle('following-state', !!data.following);
-    var fEl = document.getElementById('upm-followers');
-    if (fEl) fEl.textContent = parseInt(fEl.textContent) + (data.following ? 1 : -1);
-    showToast(data.following ? 'Now following @' + username : 'Unfollowed @' + username, data.following ? 'success' : 'info');
-  } catch(_) { showToast('Failed to update follow status', 'error'); }
-};
+if (typeof window.toggleFollow === 'undefined') {
+  window.toggleFollow = async function(username) {
+    try {
+      var res  = await fetch('/api/users/' + encodeURIComponent(username) + '/follow', { method: 'POST' });
+      var data = await res.json();
+      var btn  = document.getElementById('legacy-upm-follow-btn');
+      if (btn) {
+        btn.textContent = data.following ? 'Following' : 'Follow';
+        btn.classList.toggle('following-state', !!data.following);
+      }
+      showToast(data.following ? 'Now following @' + username : 'Unfollowed @' + username, data.following ? 'success' : 'info');
+    } catch(_) { showToast('Failed to update follow status', 'error'); }
+  };
+}
+
+if (typeof window.sendMessage === 'undefined') {
+  window.sendMessage = async function(username) {
+    /* Use a custom modal instead of prompt() which is blocked in iframes */
+    var message = await new Promise(function(resolve) {
+      var existing = document.getElementById('sh-msg-modal');
+      if (existing) existing.remove();
+      var overlay = document.createElement('div');
+      overlay.id = 'sh-msg-modal';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit';
+      overlay.innerHTML = '<div style="background:var(--bg-surface,#1e2130);border:1px solid var(--border,#2d3148);border-radius:16px;padding:28px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+        '<h3 style="margin:0 0 12px;color:var(--txt-primary,#fff);font-size:16px;"><i class="fa-solid fa-paper-plane" style="color:#6c8bef;margin-right:8px;"></i>Message @' + username + '</h3>' +
+        '<textarea id="sh-msg-input" rows="3" placeholder="Type your message..." style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--border,#2d3148);background:var(--bg-glass,#151726);color:var(--txt-primary,#fff);font-size:14px;resize:vertical;margin-bottom:12px;outline:none;"></textarea>' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
+        '<button id="sh-msg-cancel" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border,#2d3148);background:transparent;color:var(--txt-secondary,#9aa3c2);cursor:pointer;font-size:13px;">Cancel</button>' +
+        '<button id="sh-msg-send" style="padding:8px 16px;border-radius:8px;border:none;background:#6c8bef;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Send</button>' +
+        '</div></div>';
+      document.body.appendChild(overlay);
+      var ta = document.getElementById('sh-msg-input');
+      ta.focus();
+      document.getElementById('sh-msg-send').onclick = function() { overlay.remove(); resolve(ta.value); };
+      document.getElementById('sh-msg-cancel').onclick = function() { overlay.remove(); resolve(''); };
+      overlay.onclick = function(e) { if (e.target === overlay) { overlay.remove(); resolve(''); } };
+    });
+    if (!message || !message.trim()) return;
+    try {
+      var res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: username, body: message.trim() })
+      });
+      if (res.ok) showToast('Message sent!', 'success');
+      else showToast('Failed to send message', 'error');
+    } catch(_) { showToast('Failed to send message', 'error'); }
+  };
+}
 
 window.sendMessageToUser = function() {
   var handle = document.getElementById('upm-handle');
-  if (handle) sendMessage(handle.textContent.substring(1));
+  if (handle && typeof window.sendMessage === 'function')
+    window.sendMessage(handle.textContent.replace(/^@/, ''));
 };
-
-window.sendMessage = async function(username) {
-  var message = prompt('Send a message to @' + username + ':');
-  if (!message || !message.trim()) return;
-  try {
-    var res = await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ receiver: username, body: message.trim() })
-    });
-    if (res.ok) showToast('Message sent!', 'success');
-    else showToast('Failed to send message', 'error');
-  } catch(_) { showToast('Failed to send message', 'error'); }
-};
-
-function renderUserModalPosts(posts) {
-  var c = document.getElementById('upm-posts-container');
-  if (!c) return;
-  if (!posts || !posts.length) {
-    c.innerHTML = '<div class="empty-state" style="padding:2rem 0"><i class="fa-solid fa-file-lines empty-icon-fa"></i><div>No posts yet</div></div>'; return;
-  }
-  var getTopicClass = function(t) { return { General:'topic-general',Math:'topic-math',Science:'topic-science',Notes:'topic-notes','Help Needed':'topic-help' }[t] || 'topic-general'; };
-  c.innerHTML = posts.map(function(p) {
-    var av = p.profile_picture ? '<img src="'+p.profile_picture+'" class="post-avatar">' : '<div class="post-avatar-initials">'+(p.first_name?p.first_name[0]:'U')+(p.last_name?p.last_name[0]:'')+' </div>';
-    return '<div class="post-card" style="margin-bottom:12px;"><div class="post-header">'+av+
-      '<div class="post-meta"><div class="post-author">'+escapeHtml(p.first_name+' '+p.last_name)+'</div>'+
-      '<div class="post-handle">@'+p.username+' · <span class="post-time">'+formatTimeAgo(p.created_at)+'</span></div></div>'+
-      '<div class="post-topic-badge '+getTopicClass(p.topic)+'">'+p.topic+'</div></div>'+
-      '<div class="post-title">'+escapeHtml(p.title)+'</div>'+
-      '<div class="post-body">'+escapeHtml(p.body)+'</div></div>';
-  }).join('');
-}

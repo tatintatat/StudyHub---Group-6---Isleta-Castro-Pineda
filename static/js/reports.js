@@ -7,9 +7,27 @@ async function loadReportsData() {
     var stats = await res.json();
 
     var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
-    set('report-sessions', stats.posts || 0);
-    set('report-total', (stats.study_hours || 0) + 'h');
-    set('report-goal', Math.min(100, Math.round(((stats.weekly_done || 0) / 10) * 100)) + '%');
+
+    /* Sessions this month */
+    var mSessions = await fetch('/api/sessions');
+    var allSessions = await mSessions.json();
+    var now = new Date();
+    var thisMonth = (allSessions || []).filter(function(s) {
+      var d = new Date(s.session_date);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    set('report-sessions', thisMonth.length);
+
+    /* Total study hours from real data */
+    var totalMins = (allSessions || []).reduce(function(s, x) { return s + (x.duration_minutes || 0); }, 0);
+    var totalHours = (totalMins / 60).toFixed(1);
+    set('report-total', totalHours + 'h');
+
+    /* Goal completion: weekly hours vs 10h target */
+    var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    var weekMins = (allSessions || []).filter(function(s) { return new Date(s.session_date) >= weekAgo; })
+                   .reduce(function(s, x) { return s + (x.duration_minutes || 0); }, 0);
+    set('report-goal', Math.min(100, Math.round((weekMins / 600) * 100)) + '%');
 
     /* Monthly chart */
     var mres    = await fetch('/api/sessions/monthly');
@@ -45,6 +63,16 @@ async function loadReportsData() {
     var weekly = await sres.json();
     var best   = weekly.reduce(function(b, d) { return d.minutes > b.minutes ? d : b; }, { minutes: 0, day: '—' });
     set('report-best', best.minutes > 0 ? best.day : '—');
+
+    /* Education feature usage for reports */
+    try {
+      var fuRes  = await fetch('/api/feature-usage/stats');
+      var fuData = await fuRes.json();
+      set('report-edu-flips',   fuData.flashcards_flipped || 0);
+      set('report-edu-quizzes', fuData.quizzes_completed  || 0);
+      set('report-edu-ai',      fuData.ai_generations     || 0);
+      set('report-edu-timer',   fuData.timer_sessions     || 0);
+    } catch(_) {}
 
     loadStudyLog();
   } catch(_) {}

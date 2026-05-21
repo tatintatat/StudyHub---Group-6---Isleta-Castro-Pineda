@@ -2,7 +2,6 @@
 StudyHub - Flask Backend
 Dependencies: pip install flask flask-mysqldb werkzeug requests python-dotenv
 """
-
 import os
 import json
 import secrets
@@ -18,9 +17,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import MySQLdb
 from dotenv import load_dotenv
 
+# ✅ Import the blueprint HERE (at the top with other imports)
+from ai_routes import ai_bp
+from backup_service import start_backup_scheduler, trigger_manual_backup, list_backups
+
 load_dotenv()
 
+# ✅ app is defined here
 app = Flask(__name__)
+
+# ✅ Register the blueprint AFTER app is created
+app.register_blueprint(ai_bp)
 app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(32))
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB – enough for base64-encoded images
 
@@ -89,12 +96,48 @@ def run_migrations():
         """)
         db.commit()
 
+        # Ensure feature_usage table exists for education tracking
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS feature_usage (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                feature ENUM('flashcard_flip','flashcard_create','ai_generate','quiz_attempt','quiz_complete','timer_session','subject_create') NOT NULL,
+                used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        db.commit()
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id          INT AUTO_INCREMENT PRIMARY KEY,
+                sender_id   INT NOT NULL,
+                receiver_id INT NOT NULL,
+                body        TEXT NOT NULL,
+                is_read     BOOLEAN DEFAULT FALSE,
+                created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_id)   REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        db.commit()
+
+        if not col_exists('messages', 'is_read'):
+            try:
+                cur.execute(
+                    "ALTER TABLE messages ADD COLUMN is_read BOOLEAN DEFAULT FALSE"
+                )
+                db.commit()
+            except Exception:
+                pass
+
         cur.close(); db.close()
     except Exception:
         pass  # DB might not be set up yet — that's fine
 
 
 run_migrations()
+start_backup_scheduler()
 
 # ── Google OAuth config ───────────────────────────────────────────────────────
 GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID",     "YOUR_GOOGLE_CLIENT_ID")
@@ -219,7 +262,9 @@ def education():
     if not user:
         session.clear()
         return redirect(url_for("index"))
-    return render_template("education.html", user=user)
+    return render_template("education.html", user=user,
+                           gemini_key=os.getenv("GEMINI_API_KEY", ""),
+                           anthropic_key=os.getenv("ANTHROPIC_API_KEY", ""))
 
 
 @app.route("/profile")
@@ -589,11 +634,20 @@ def get_stats():
         "subjects":      subjects["cnt"] if subjects else 0,
         "flashcards":    flashcards["cnt"] if flashcards else 0,
         "total_minutes": int(total_time["total"]) if total_time else 0,
+        "study_hours":   round(int(total_time["total"] if total_time else 0) / 60, 1),
         "streak":        max(streak, 1),
+        "score":         0,
         "created_at":    member_since,
         "member_since":  member_since,
         "posts":         posts_count["cnt"] if posts_count else 0,
         "likes":         int(likes_received["cnt"]) if likes_received else 0,
+        "weekly_done":   query_one(
+            "SELECT COALESCE(SUM(duration_minutes),0) AS s FROM study_sessions "
+            "WHERE user_id=%s AND session_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", (uid,)
+        )["s"] // 60 if query_one(
+            "SELECT COALESCE(SUM(duration_minutes),0) AS s FROM study_sessions "
+            "WHERE user_id=%s AND session_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", (uid,)
+        ) else 0,
     })
 
 
@@ -677,31 +731,46 @@ def delete_flashcard(fid):
 @login_required
 def get_posts():
     uid     = session["user_id"]
-    filter_ = request.args.get("filter", "all")
-    topic   = request.args.get("topic", "all")
-
-    base   = """
+    filter_ = request.args.get("filter", "all")   # all | my | user | following
+    topic   = request.args.get("topic",  "all")
+    # "user" filter: ?filter=user&user=:username
+    target_username = request.args.get("user", "").strip()
+ 
+    base = """
         SELECT p.*, u.first_name, u.last_name, u.username, u.profile_picture,
                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id=p.id AND pl.user_id=%s) AS user_liked
         FROM posts p JOIN users u ON p.user_id=u.id
     """
-    params = [uid]
+    params     = [uid]
     conditions = []
-
+ 
     if filter_ == "my":
-        conditions.append("p.user_id=%s"); params.append(uid)
-    elif filter_ == "user":
-        username = request.args.get("user", "")
-        conditions.append("u.username=%s"); params.append(username)
-
+        conditions.append("p.user_id=%s")
+        params.append(uid)
+    elif filter_ == "user" and target_username:
+        # Look up the user by username and filter by their ID
+        target = query_one("SELECT id FROM users WHERE username=%s", (target_username,))
+        if target:
+            conditions.append("p.user_id=%s")
+            params.append(target["id"])
+        else:
+            return jsonify([])          # unknown user → empty list
+    elif filter_ == "following":
+        # Posts from people the current user follows
+        conditions.append("""p.user_id IN (
+            SELECT following_id FROM follows WHERE follower_id=%s
+        )""")
+        params.append(uid)
+ 
     if topic and topic != "all":
-        conditions.append("p.topic=%s"); params.append(topic)
-
+        conditions.append("p.topic=%s")
+        params.append(topic)
+ 
     if conditions:
         base += " WHERE " + " AND ".join(conditions)
     base += " ORDER BY p.created_at DESC LIMIT 50"
-
-    rows = query_all(base, tuple(params))
+ 
+    rows   = query_all(base, tuple(params))
     result = []
     for r in rows:
         r = dict(r)
@@ -710,6 +779,7 @@ def get_posts():
             r["created_at"] = str(r["created_at"])
         result.append(r)
     return jsonify(result)
+
 
 
 @app.route("/api/posts", methods=["POST"])
@@ -833,6 +903,118 @@ def mark_all_notifications_read():
 # MESSAGES
 # ══════════════════════════════════════════
 
+@app.route("/api/messages/conversations", methods=["GET"])
+@login_required
+def get_conversations():
+    uid = session["user_id"]
+    try:
+        rows = query_all(
+            """SELECT
+                 u.id, u.first_name, u.last_name, u.username, u.profile_picture,
+                 m.body        AS last_message,
+                 m.created_at  AS last_at,
+                 m.sender_id,
+                 (SELECT COUNT(*) FROM messages
+                  WHERE receiver_id=%s AND sender_id=u.id AND is_read=0) AS unread_count
+               FROM users u
+               JOIN messages m ON m.id = (
+                 SELECT id FROM messages
+                 WHERE (sender_id=%s AND receiver_id=u.id)
+                    OR (sender_id=u.id AND receiver_id=%s)
+                 ORDER BY created_at DESC LIMIT 1
+               )
+               WHERE u.id != %s AND u.is_active=1
+               ORDER BY m.created_at DESC
+               LIMIT 50""",
+            (uid, uid, uid, uid)
+        )
+        result = []
+        for r in rows:
+            r = dict(r)
+            if r.get("last_at"):
+                r["last_at"] = str(r["last_at"])
+            result.append(r)
+        return jsonify(result)
+    except Exception as e:
+        # Fallback: derive conversations from messages table without is_read
+        try:
+            rows = query_all(
+                """SELECT
+                     u.id, u.first_name, u.last_name, u.username, u.profile_picture,
+                     m.body       AS last_message,
+                     m.created_at AS last_at,
+                     m.sender_id,
+                     0            AS unread_count
+                   FROM users u
+                   JOIN messages m ON m.id = (
+                     SELECT id FROM messages
+                     WHERE (sender_id=%s AND receiver_id=u.id)
+                        OR (sender_id=u.id AND receiver_id=%s)
+                     ORDER BY created_at DESC LIMIT 1
+                   )
+                   WHERE u.id != %s AND u.is_active=1
+                   ORDER BY m.created_at DESC
+                   LIMIT 50""",
+                (uid, uid, uid)
+            )
+            result = []
+            for r in rows:
+                r = dict(r)
+                if r.get("last_at"):
+                    r["last_at"] = str(r["last_at"])
+                result.append(r)
+            return jsonify(result)
+        except Exception:
+            return jsonify([])
+
+
+@app.route("/api/messages/unread_count", methods=["GET"])
+@login_required
+def get_unread_count():
+    uid = session["user_id"]
+    try:
+        row = query_one(
+            "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id=%s AND is_read=0",
+            (uid,)
+        )
+        return jsonify({"count": row["cnt"] if row else 0})
+    except Exception:
+        # is_read column may not exist — return 0 gracefully
+        return jsonify({"count": 0})
+
+
+@app.route("/api/messages/<int:mid>/read", methods=["POST"])
+@login_required
+def mark_message_read(mid):
+    uid = session["user_id"]
+    try:
+        execute("UPDATE messages SET is_read=1 WHERE id=%s AND receiver_id=%s", (mid, uid))
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
+@app.route("/api/messages/read_all", methods=["POST"])
+@login_required
+def mark_all_read():
+    uid = session["user_id"]
+    other = request.get_json(silent=True) or {}
+    other_username = other.get("user", "")
+    try:
+        if other_username:
+            other_user = query_one("SELECT id FROM users WHERE username=%s", (other_username,))
+            if other_user:
+                execute(
+                    "UPDATE messages SET is_read=1 WHERE receiver_id=%s AND sender_id=%s",
+                    (uid, other_user["id"])
+                )
+        else:
+            execute("UPDATE messages SET is_read=1 WHERE receiver_id=%s", (uid,))
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
 @app.route("/api/messages", methods=["GET"])
 @login_required
 def get_messages():
@@ -929,6 +1111,69 @@ def heartbeat():
 
 
 # ══════════════════════════════════════════
+# EDUCATION FEATURE USAGE TRACKING
+# ══════════════════════════════════════════
+
+ALLOWED_FEATURES = {'flashcard_flip','flashcard_create','ai_generate','quiz_attempt','quiz_complete','timer_session','subject_create'}
+
+@app.route("/api/feature-usage", methods=["POST"])
+@login_required
+def log_feature_usage():
+    data    = request.get_json(silent=True) or {}
+    feature = data.get("feature", "")
+    if feature not in ALLOWED_FEATURES:
+        return jsonify({"error": "invalid feature"}), 400
+    execute(
+        "INSERT INTO feature_usage (user_id, feature) VALUES (%s, %s)",
+        (session["user_id"], feature)
+    )
+    return jsonify({"ok": True})
+
+
+@app.route("/api/feature-usage/stats", methods=["GET"])
+@login_required
+def get_feature_usage_stats():
+    uid  = session["user_id"]
+    rows = query_all(
+        "SELECT feature, COUNT(*) AS cnt FROM feature_usage WHERE user_id=%s GROUP BY feature",
+        (uid,)
+    )
+    counts = {r["feature"]: r["cnt"] for r in rows}
+
+    # Totals for reports & statistics
+    flashcards_flipped  = counts.get("flashcard_flip",    0)
+    flashcards_created  = counts.get("flashcard_create",  0)
+    ai_generations      = counts.get("ai_generate",       0)
+    quizzes_attempted   = counts.get("quiz_attempt",      0)
+    quizzes_completed   = counts.get("quiz_complete",     0)
+    timer_sessions      = counts.get("timer_session",     0)
+
+    # Weekly activity (last 7 days)
+    weekly = query_all(
+        """SELECT DATE(used_at) AS day, COUNT(*) AS cnt
+           FROM feature_usage WHERE user_id=%s AND used_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+           GROUP BY DATE(used_at) ORDER BY day""",
+        (uid,)
+    )
+    weekly_total = sum(r["cnt"] for r in weekly)
+
+    return jsonify({
+        "flashcards_flipped":  flashcards_flipped,
+        "flashcards_created":  flashcards_created,
+        "ai_generations":      ai_generations,
+        "quizzes_attempted":   quizzes_attempted,
+        "quizzes_completed":   quizzes_completed,
+        "timer_sessions":      timer_sessions,
+        "total_edu_actions":   sum(counts.values()),
+        "weekly_edu_actions":  weekly_total,
+        "by_feature":          counts,
+    })
+
+
+
+
+
+# ══════════════════════════════════════════
 # SEARCH
 # ══════════════════════════════════════════
 
@@ -1022,19 +1267,30 @@ def follow_user(username):
 def get_user_profile(username):
     ensure_follows_table()
     uid  = session["user_id"]
+ 
+    # Return last_active so the DM panel can show online status
     user = query_one(
-        "SELECT id, first_name, last_name, username, profile_picture, score, created_at "
-        "FROM users WHERE username=%s AND is_active=1",
+        """SELECT id, first_name, last_name, username, profile_picture,
+                  score, created_at, last_active
+           FROM users
+           WHERE username=%s AND is_active=1""",
         (username,)
     )
     if not user:
         return jsonify({"error": "User not found."}), 404
+ 
     user = dict(user)
+ 
+    # Serialize datetimes
     if user.get("created_at"):
         user["created_at"] = str(user["created_at"])
+    if user.get("last_active"):
+        user["last_active"] = str(user["last_active"])
+ 
+    # Follower / following counts
     try:
-        followers   = query_one("SELECT COUNT(*) AS cnt FROM follows WHERE following_id=%s", (user["id"],))
-        following   = query_one("SELECT COUNT(*) AS cnt FROM follows WHERE follower_id=%s", (user["id"],))
+        followers    = query_one("SELECT COUNT(*) AS cnt FROM follows WHERE following_id=%s", (user["id"],))
+        following    = query_one("SELECT COUNT(*) AS cnt FROM follows WHERE follower_id=%s",  (user["id"],))
         is_following = query_one(
             "SELECT id FROM follows WHERE follower_id=%s AND following_id=%s", (uid, user["id"])
         )
@@ -1045,9 +1301,31 @@ def get_user_profile(username):
         user["followers_count"] = 0
         user["following_count"] = 0
         user["is_following"]    = False
+ 
+    # Post count
     posts_count = query_one("SELECT COUNT(*) AS cnt FROM posts WHERE user_id=%s", (user["id"],))
     user["posts_count"] = posts_count["cnt"] if posts_count else 0
+ 
+    # Streak (reuse same logic as /api/stats)
+    streak_rows = query_all(
+        "SELECT DISTINCT session_date FROM study_sessions WHERE user_id=%s ORDER BY session_date DESC LIMIT 365",
+        (user["id"],)
+    )
+    streak = 0
+    if streak_rows:
+        from datetime import date, timedelta
+        check = date.today()
+        for r in streak_rows:
+            d = r["session_date"] if isinstance(r["session_date"], date) else date.fromisoformat(str(r["session_date"]))
+            if d == check:
+                streak += 1
+                check = check - timedelta(days=1)
+            else:
+                break
+    user["streak"] = streak
+ 
     return jsonify(user)
+ 
 
 
 # ══════════════════════════════════════════
@@ -1113,6 +1391,30 @@ def update_profile():
     session["user_name"] = f"{first_name} {last_name}"
     return jsonify({"message": "Profile updated.", "first_name": first_name,
                     "last_name": last_name, "username": username})
+
+
+# ── Run ───────────────────────────────────────────────────────────────────────
+
+# ══════════════════════════════════════════
+# BACKUP API
+# ══════════════════════════════════════════
+
+@app.route("/api/backup/trigger", methods=["POST"])
+@login_required
+def api_trigger_backup():
+    """Manually trigger a backup."""
+    data        = request.get_json(silent=True) or {}
+    backup_type = data.get("type", "daily")
+    result      = trigger_manual_backup(backup_type)
+    status_code = 200 if result["success"] else 500
+    return jsonify(result), status_code
+
+
+@app.route("/api/backup/list", methods=["GET"])
+@login_required
+def api_list_backups():
+    """List all existing backup files."""
+    return jsonify(list_backups())
 
 
 # ── Run ───────────────────────────────────────────────────────────────────────

@@ -66,6 +66,18 @@ async function loadStatisticsData() {
     set('stat-achievements', Math.min(10, Math.floor((stData.score || 0) / 50)));
     set('perf-retention', (totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0) + '%');
 
+    /* Education feature usage */
+    try {
+      var fuRes  = await fetch('/api/feature-usage/stats');
+      var fuData = await fuRes.json();
+      set('stat-quizzes',   fuData.quizzes_completed || 0);
+      set('stat-reviewed',  fuData.flashcards_flipped || totalReviews);
+      set('stat-ai-gen',    fuData.ai_generations || 0);
+      set('stat-timer',     fuData.timer_sessions || 0);
+      set('perf-edu-total', fuData.total_edu_actions || 0);
+      /* Accuracy stays from flashcard review_count / correct_count */
+    } catch(_) {}
+
     buildHeatmap();
   } catch(_) {}
 }

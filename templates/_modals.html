@@ -192,7 +192,7 @@
   </div>
 </div>
 
-<!-- User Profile Modal -->
+<!-- User Profile Modal (legacy fallback for non-community pages) -->
 <div class="modal-overlay" id="user-profile-modal">
   <div class="modal" style="max-width:600px;">
     <div class="modal-header">
@@ -201,18 +201,18 @@
     </div>
     <div class="modal-body" style="padding:0;">
       <div class="upm-hero">
-        <div class="upm-ava" id="upm-ava"></div>
+        <div class="upm-ava" id="legacy-upm-ava"></div>
         <div class="upm-info">
-          <div class="upm-name" id="upm-name">Loading…</div>
-          <div class="upm-handle" id="upm-handle">@username</div>
+          <div class="upm-name" id="legacy-upm-name">Loading…</div>
+          <div class="upm-handle" id="legacy-upm-handle">@username</div>
           <div class="upm-stats">
-            <span><strong id="upm-posts">0</strong> Posts</span>
-            <span><strong id="upm-followers">0</strong> Followers</span>
-            <span><strong id="upm-following">0</strong> Following</span>
+            <span><strong id="legacy-upm-posts">0</strong> Posts</span>
+            <span><strong id="legacy-upm-followers">0</strong> Followers</span>
+            <span><strong id="legacy-upm-following">0</strong> Following</span>
           </div>
         </div>
         <div class="upm-actions">
-          <button class="btn btn-primary upm-follow-btn" id="upm-follow-btn">Follow</button>
+          <button class="btn btn-primary upm-follow-btn" id="legacy-upm-follow-btn">Follow</button>
           <button class="btn btn-secondary" onclick="sendMessageToUser()">Message</button>
         </div>
       </div>

@@ -54,10 +54,25 @@ if (hamburger) hamburger.addEventListener('click', function() {
   document.getElementById('mobile-drawer').classList.toggle('open');
 });
 
+/* ── PROFILE DROPDOWN ── */
+var navUserWrap = document.getElementById('nav-user-wrap');
+var profileDrop = document.getElementById('profile-dropdown');
+
+if (navUserWrap && profileDrop) {
+  document.getElementById('nav-user').addEventListener('click', function(e) {
+    e.stopPropagation();
+    navUserWrap.classList.toggle('open');
+  });
+  document.addEventListener('click', function(e) {
+    if (!navUserWrap.contains(e.target)) navUserWrap.classList.remove('open');
+  });
+}
+
 /* ── LOGOUT (with confirmation) ── */
 var logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) logoutBtn.addEventListener('click', async function(e) {
   e.preventDefault(); e.stopPropagation();
+  if (navUserWrap) navUserWrap.classList.remove('open');
   SHConfirm.show({
     type: 'warning',
     icon: 'fa-arrow-right-from-bracket',

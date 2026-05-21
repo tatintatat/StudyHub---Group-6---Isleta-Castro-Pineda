@@ -157,3 +157,15 @@ CREATE TABLE IF NOT EXISTS follows (
 
 CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
+
+-- Education Feature Usage Tracking
+CREATE TABLE IF NOT EXISTS feature_usage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    feature ENUM('flashcard_flip','flashcard_create','ai_generate','quiz_attempt','quiz_complete','timer_session','subject_create') NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_feature_usage_user ON feature_usage(user_id, feature);
+CREATE INDEX IF NOT EXISTS idx_feature_usage_date ON feature_usage(user_id, used_at);
