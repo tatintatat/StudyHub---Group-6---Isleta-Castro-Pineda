@@ -1,9 +1,3 @@
--- StudyHub Database Schema
--- Run this file in MySQL to set up the database
-
-CREATE DATABASE IF NOT EXISTS studyhub;
-USE studyhub;
-
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
@@ -13,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255),
     google_id VARCHAR(255) UNIQUE,
     auth_provider ENUM('local', 'google') DEFAULT 'local',
-    profile_picture VARCHAR(500),
+    profile_picture MEDIUMTEXT,
     score INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -38,8 +32,12 @@ CREATE TABLE IF NOT EXISTS subjects (
     name VARCHAR(100) NOT NULL,
     color VARCHAR(20) DEFAULT '#3b9eff',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Migration: add deleted_at if upgrading an existing database
+-- ALTER TABLE subjects ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL;
 
 -- Study Sessions
 CREATE TABLE IF NOT EXISTS study_sessions (

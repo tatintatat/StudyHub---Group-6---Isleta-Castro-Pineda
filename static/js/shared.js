@@ -9,8 +9,12 @@ window.escapeHtml = function(t) {
   return d.innerHTML;
 };
 window.formatTimeAgo = function(ds) {
-  var d = new Date(ds), now = new Date(), diff = Math.floor((now - d) / 1000);
-  if (diff < 60)     return 'Just now';
+  if (!ds) return '';
+  // created_at is now a Unix ms timestamp from the server
+  var d = new Date(typeof ds === 'number' ? ds : Number(ds));
+  var diff = Math.floor((Date.now() - d) / 1000);
+  if (diff < 5)      return 'Just now';
+  if (diff < 60)     return diff + 's ago';
   if (diff < 3600)   return Math.floor(diff / 60) + 'm ago';
   if (diff < 86400)  return Math.floor(diff / 3600) + 'h ago';
   if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';

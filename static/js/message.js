@@ -31,14 +31,15 @@ function msgFriendlyDate(iso) {
 }
 
 /* ── state ────────────────────────────────────────────────── */
-var _conv = {
-  username: null,   // currently open conversation partner
-  name:     '',
-  avatar:   '',
-  initials: '?',
-  lastId:   0,      // highest message id seen, for polling
-  poll:     null,   // setInterval handle
-  filter:   'all',
+var _conv = window._conv = {
+  username:   null,   // currently open conversation partner
+  name:       '',
+  avatar:     '',
+  initials:   '?',
+  lastId:     0,      // highest message id seen, for polling
+  poll:       null,   // setInterval handle for messages
+  statusPoll: null,   // setInterval handle for online status
+  filter:     'all',
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -73,7 +74,12 @@ async function loadConversations() {
       var ava  = c.profile_picture
         ? '<img src="' + msgEsc(c.profile_picture) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
         : msgEsc(((c.first_name || '?')[0] + (c.last_name || '')[0]).toUpperCase());
-      var preview = msgEsc((c.last_message || '').substring(0, 50));
+      var _lastMsg = c.last_message || '';
+      var preview = msgEsc(
+        _lastMsg.startsWith('__FILE__')
+          ? (function(){ try { return '📎 ' + JSON.parse(_lastMsg.slice(8)).name; } catch(e){ return '📎 Attachment'; } })()
+          : _lastMsg.substring(0, 50)
+      );
       var active  = (_conv.username === c.username) ? ' active' : '';
 
       return (
@@ -102,6 +108,30 @@ async function loadConversations() {
     if (list) list.innerHTML =
       '<div style="padding:16px;color:var(--txt-muted);font-size:13px;">Failed to load conversations.</div>';
   }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   1b. UPDATE ONLINE STATUS IN HEADER
+══════════════════════════════════════════════════════════ */
+async function _updateOnlineStatus(username) {
+  if (!username) return;
+  try {
+    var dot = document.getElementById('chatOnlineDot');
+    if (!dot) return;
+
+    var res   = await fetch('/api/online');
+    if (!res.ok) return;
+    var users = await res.json();
+    if (!Array.isArray(users)) return;
+
+    var online = users.some(function(u) {
+      return (u.username || '').toLowerCase() === username.toLowerCase();
+    });
+
+    // Green dot = online, gray dot = offline — no text label
+    dot.style.background = online ? '#34d399' : '#6b7a99';
+  } catch(e) {}
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -152,6 +182,11 @@ window.openConversation = function(el) {
   var headerName = document.getElementById('chatHeaderName');
   if (headerName) headerName.textContent = name;
 
+  /* Reset dot to gray while fetching real status */
+  var dot = document.getElementById('chatOnlineDot');
+  if (dot) dot.style.background = '#6b7a99';
+  _updateOnlineStatus(username);
+
   /* Load messages then start polling */
   clearInterval(_conv.poll);
   var bubbles = document.getElementById('msgBubbles');
@@ -161,6 +196,12 @@ window.openConversation = function(el) {
 
   _loadMessages(username, true);
   _conv.poll = setInterval(function() { _loadMessages(username, false); }, 3000);
+
+  /* Poll online status every 10s independently of message polling */
+  if (_conv.statusPoll) clearInterval(_conv.statusPoll);
+  _conv.statusPoll = setInterval(function() {
+    if (_conv.username) _updateOnlineStatus(_conv.username);
+  }, 5000);
 
   /* Mark read */
   fetch('/api/messages/read_all', {
@@ -177,6 +218,7 @@ if (backBtn) {
     var chatArea = document.getElementById('msgChatArea');
     if (chatArea) chatArea.classList.remove('mobile-open');
     clearInterval(_conv.poll);
+    clearInterval(_conv.statusPoll);
     _conv.username = null;
   });
 }
@@ -221,6 +263,9 @@ async function _loadMessages(username, fullReload) {
         updateMsgBadge();
       }
     }
+
+    /* Refresh online status every poll */
+    _updateOnlineStatus(_conv.username);
 
     /* Track highest id */
     msgs.forEach(function(m) { if (m.id > _conv.lastId) _conv.lastId = m.id; });
@@ -269,10 +314,31 @@ function _renderBubbles(msgs, container, scroll) {
       }
     }
 
+    var rawBody = m.body || m.content || '';
+    var bubbleInner;
+    if (rawBody.startsWith('__FILE__')) {
+      try {
+        var fdata = JSON.parse(rawBody.slice(8));
+        if (fdata.type && fdata.type.startsWith('image/')) {
+          bubbleInner = '<img class="msg-bubble-img" src="' + fdata.data +
+            '" alt="' + msgEsc(fdata.name) + '" onclick="window.open(this.src)" title="' + msgEsc(fdata.name) + '">';
+        } else {
+          bubbleInner = '<a class="msg-bubble-file" href="' + fdata.data +
+            '" download="' + msgEsc(fdata.name) + '" target="_blank">' +
+            '<i class="fa-solid fa-file" style="margin-right:6px;"></i>' +
+            msgEsc(fdata.name) + '</a>';
+        }
+      } catch(e) {
+        bubbleInner = msgEsc(rawBody);
+      }
+    } else {
+      bubbleInner = msgEsc(rawBody);
+    }
+
     row.innerHTML =
       avaHtml +
       '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' +
-        msgEsc(m.body || m.content || '') +
+        bubbleInner +
       '</div>' +
       '<div class="msg-bubble-time">' + msgAgo(m.created_at) + '</div>';
 
@@ -289,6 +355,8 @@ function _renderBubbles(msgs, container, scroll) {
 ══════════════════════════════════════════════════════════ */
 async function _doSend() {
   if (!_conv.username) return;
+  /* If a file is pending, let the file sender handle it */
+  if (window._pendingFileRef && window._pendingFileRef()) return;
   var input   = document.getElementById('msgInput');
   var content = (input.value || '').trim();
   if (!content) return;
@@ -321,8 +389,8 @@ async function _doSend() {
       var err = await res.json().catch(function() { return {}; });
       throw new Error(err.error || 'Send failed');
     }
-    /* Immediately refresh so real id replaces optimistic */
-    _loadMessages(_conv.username, false);
+    /* Full reload to replace optimistic bubble with real message from server */
+    _loadMessages(_conv.username, true);
     loadConversations();
   } catch (e) {
     console.error('[msg] send', e);
@@ -643,3 +711,164 @@ if (document.getElementById('convList')) {
 initMsgNavDropdown();
 updateMsgBadge();
 setInterval(updateMsgBadge, 10000);
+/* ══════════════════════════════════════════════════════════
+   EMOJI PICKER
+══════════════════════════════════════════════════════════ */
+var EMOJIS = [
+  '😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','😋','😎','😍','😘','🥰','😗',
+  '😙','😚','🙂','🤗','🤩','🤔','🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐',
+  '😯','😪','😫','🥱','😴','😌','😛','😜','😝','🤤','😒','😓','😔','😕','🙃','🤑',
+  '😲','☹️','🙁','😖','😞','😟','😤','😢','😭','😦','😧','😨','😩','🤯','😬','😰',
+  '😱','🥵','🥶','😳','🤪','😵','🥴','😠','😡','🤬','😷','🤒','🤕','🤢','🤧','🥳',
+  '👍','👎','👏','🙌','🤝','👋','✌️','🤞','🤟','🤙','💪','🫶','❤️','🔥','⭐','✨',
+  '🎉','🎊','💯','✅','❌','⚡','💡','📚','🎓','📝','💻','🖥️','📱','⏰','🏆','🎯'
+];
+
+(function() {
+  var picker  = document.getElementById('msgEmojiPicker');
+  var grid    = document.getElementById('msgEmojiGrid');
+  var emojiBtn = document.getElementById('msgEmojiBtn');
+  var input   = document.getElementById('msgInput');
+
+  if (!picker || !grid || !emojiBtn || !input) return;
+
+  // Populate grid
+  grid.innerHTML = EMOJIS.map(function(e) {
+    return '<button class="msg-emoji-btn" data-emoji="' + e + '">' + e + '</button>';
+  }).join('');
+
+  // Insert emoji into input
+  grid.addEventListener('click', function(ev) {
+    var btn = ev.target.closest('.msg-emoji-btn');
+    if (!btn) return;
+    var emoji = btn.dataset.emoji;
+    var start = input.selectionStart || input.value.length;
+    var end   = input.selectionEnd   || input.value.length;
+    input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+    input.focus();
+    input.setSelectionRange(start + emoji.length, start + emoji.length);
+    picker.style.display = 'none';
+  });
+
+  // Toggle picker
+  emojiBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Close picker when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!picker.contains(e.target) && e.target !== emojiBtn) {
+      picker.style.display = 'none';
+    }
+  });
+})();
+
+/* ══════════════════════════════════════════════════════════
+   FILE ATTACHMENT
+══════════════════════════════════════════════════════════ */
+(function() {
+  var attachBtn   = document.getElementById('msgAttachBtn');
+  var fileInput   = document.getElementById('msgFileInput');
+  var filePreview = document.getElementById('msgFilePreview');
+  var fileNameEl  = document.getElementById('msgFileName');
+  var fileRemove  = document.getElementById('msgFileRemove');
+
+  if (!attachBtn || !fileInput) return;
+
+  var _pendingFile = null; // { name, dataUrl, type }
+
+  attachBtn.addEventListener('click', function() {
+    fileInput.value = '';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function() {
+    var file = fileInput.files[0];
+    if (!file) return;
+
+    // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      if (typeof showToast === 'function') showToast('File too large (max 5MB)', 'error');
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      _pendingFile = { name: file.name, dataUrl: e.target.result, type: file.type };
+      if (fileNameEl) fileNameEl.textContent = file.name;
+      if (filePreview) filePreview.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  if (fileRemove) {
+    fileRemove.addEventListener('click', function() {
+      _pendingFile = null;
+      fileInput.value = '';
+      if (filePreview) filePreview.style.display = 'none';
+    });
+  }
+
+  // Hook into send — if a file is pending, send it as the message body
+  var origSendBtn = document.getElementById('msgSendBtn');
+  if (origSendBtn) {
+    origSendBtn.addEventListener('click', function() {
+      if (!_pendingFile) return; // normal text send handles it
+      _sendFile();
+    }, true); // capture phase so it runs before _doSend
+  }
+
+  // Also hook Enter key
+  var msgInput = document.getElementById('msgInput');
+  if (msgInput) {
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey && _pendingFile) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        _sendFile();
+      }
+    }, true);
+  }
+
+  async function _sendFile() {
+    if (!_pendingFile || !_conv.username) return;
+
+    var file = _pendingFile;
+    _pendingFile = null;
+    if (filePreview) filePreview.style.display = 'none';
+
+    // Build message body — prefix with special marker so receiver knows it's a file
+    var msgBody = '__FILE__' + JSON.stringify({ name: file.name, type: file.type, data: file.dataUrl });
+
+    // Optimistic bubble
+    var bubblesEl = document.getElementById('msgBubbles');
+    if (bubblesEl) {
+      var isImg = file.type.startsWith('image/');
+      var bubble = isImg
+        ? '<img class="msg-bubble-img" src="' + file.dataUrl + '" alt="' + file.name + '" onclick="window.open(this.src)">'
+        : '<span>📎 ' + file.name + '</span>';
+      var wrap = document.createElement('div');
+      wrap.className = 'msg-bubble-wrap sent';
+      wrap.innerHTML = '<div class="msg-bubble sent">' + bubble + '</div>';
+      bubblesEl.appendChild(wrap);
+      bubblesEl.scrollTop = bubblesEl.scrollHeight;
+    }
+
+    try {
+      var res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: _conv.username, body: msgBody })
+      });
+      if (!res.ok) throw new Error('Send failed');
+      _loadMessages(_conv.username, true);
+      loadConversations();
+    } catch(e) {
+      if (typeof showToast === 'function') showToast('Failed to send file', 'error');
+    }
+  }
+
+  // Expose for use in renderBubbles
+  window._pendingFileRef = function() { return _pendingFile; };
+})();

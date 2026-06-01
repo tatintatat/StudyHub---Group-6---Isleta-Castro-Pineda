@@ -1,0 +1,93 @@
+Options -Indexes
+RewriteEngine On
+RewriteBase /
+
+# ── Force HTTPS ────────────────────────────────────────────────────────────
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ── Block direct access to includes/ ──────────────────────────────────────
+RewriteRule ^includes/           - [F,L]
+
+# ── Static files and real .php files pass through directly ────────────────
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^                    - [L]
+
+# ── Auth routes ────────────────────────────────────────────────────────────
+RewriteRule ^auth/google/?$                  auth/google.php [L]
+RewriteRule ^auth/google/callback/?$         auth/google_callback.php [L]
+
+# ── Page routes ───────────────────────────────────────────────────────────
+RewriteRule ^$                               index.php [L]
+RewriteRule ^signup/?$                       signup.php [L]
+RewriteRule ^dashboard/?$                    dashboard.php [L]
+RewriteRule ^community/?$                    community.php [L]
+RewriteRule ^reports/?$                      reports.php [L]
+RewriteRule ^admin/?$                        admin.php [L]
+RewriteRule ^api/report/?$                   api/report.php [L]
+RewriteRule ^api/admin/?$                    api/admin.php [L]
+RewriteRule ^statistics/?$                   statistics.php [L]
+RewriteRule ^education/?$                    education.php [L]
+RewriteRule ^profile/?$                      profile.php [L]
+RewriteRule ^messages/?$                     messages.php [L]
+
+# ── AI API routes ──────────────────────────────────────────────────────────
+RewriteRule ^api/ai/generate/?$              api/ai/generate.php [L]
+RewriteRule ^api/ai/generate-file/?$         api/ai/generate_file.php [L]
+RewriteRule ^api/ai/extract-text/?$          api/ai/extract_text.php [L]
+RewriteRule ^api/ai/flashcards/?$            api/ai/flashcards.php [L]
+RewriteRule ^api/ai/quiz/?$                  api/ai/quiz.php [L]
+RewriteRule ^api/ai/reviewer/?$              api/ai/reviewer.php [L]
+RewriteRule ^api/ai/health/?$                api/ai/health.php [L]
+
+# ── Core API routes ────────────────────────────────────────────────────────
+RewriteRule ^api/signup/?$                   api/signup.php [L]
+RewriteRule ^api/login/?$                    api/login.php [L]
+RewriteRule ^api/logout/?$                   api/logout.php [L]
+
+RewriteRule ^api/subjects/?$                 api/subjects.php [L]
+RewriteRule ^api/subjects/([0-9]+)/?$        api/subjects.php?id=$1 [L,QSA]
+
+RewriteRule ^api/sessions/weekly/?$          api/sessions.php?action=weekly [L,QSA]
+RewriteRule ^api/sessions/monthly/?$         api/sessions.php?action=monthly [L,QSA]
+RewriteRule ^api/sessions/heatmap/?$         api/sessions.php?action=heatmap [L,QSA]
+RewriteRule ^api/sessions/peak-hours/?$      api/sessions.php?action=peak-hours [L,QSA]
+RewriteRule ^api/sessions/subject-breakdown/?$ api/sessions.php?action=subject-breakdown [L,QSA]
+RewriteRule ^api/sessions/?$                 api/sessions.php [L]
+
+RewriteRule ^api/stats/?$                    api/stats.php [L]
+
+RewriteRule ^api/flashcards/([0-9]+)/review/?$ api/flashcards.php?id=$1&action=review [L,QSA]
+RewriteRule ^api/flashcards/([0-9]+)/?$      api/flashcards.php?id=$1 [L,QSA]
+RewriteRule ^api/flashcards/?$               api/flashcards.php [L]
+
+RewriteRule ^api/posts/([0-9]+)/like/?$      api/posts.php?id=$1&action=like [L,QSA]
+RewriteRule ^api/posts/([0-9]+)/comments/?$  api/comments.php?post_id=$1 [L,QSA]
+RewriteRule ^api/posts/([0-9]+)/?$           api/posts.php?id=$1 [L,QSA]
+RewriteRule ^api/posts/?$                    api/posts.php [L]
+
+RewriteRule ^api/notifications/read-all/?$        api/notifications.php?action=read-all [L,QSA]
+RewriteRule ^api/notifications/([0-9]+)/read/?$   api/notifications.php?id=$1&action=read [L,QSA]
+RewriteRule ^api/notifications/?$                 api/notifications.php [L]
+
+RewriteRule ^api/messages/conversations/?$   api/messages.php?action=conversations [L,QSA]
+RewriteRule ^api/messages/unread_count/?$    api/messages.php?action=unread_count [L,QSA]
+RewriteRule ^api/messages/read_all/?$        api/messages.php?action=read_all [L,QSA]
+RewriteRule ^api/messages/([0-9]+)/read/?$   api/messages.php?id=$1&action=read [L,QSA]
+RewriteRule ^api/messages/?$                 api/messages.php [L]
+
+RewriteRule ^api/leaderboard/?$              api/leaderboard.php [L]
+RewriteRule ^api/online/?$                   api/online.php [L]
+RewriteRule ^api/user-status/?$              api/user_status.php [L]
+RewriteRule ^api/heartbeat/?$                api/heartbeat.php [L]
+RewriteRule ^api/search/?$                   api/search.php [L]
+
+RewriteRule ^api/feature-usage/stats/?$      api/feature_usage.php?action=stats [L,QSA]
+RewriteRule ^api/feature-usage/?$            api/feature_usage.php [L]
+
+RewriteRule ^api/followers/counts/?$         api/followers.php?action=counts [L,QSA]
+RewriteRule ^api/users/([^/]+)/follow/?$     api/followers.php?username=$1&action=follow [L,QSA]
+RewriteRule ^api/users/([^/]+)/?$            api/user_profile.php?username=$1 [L,QSA]
+
+RewriteRule ^api/profile/photo/?$            api/profile_photo.php [L]
+RewriteRule ^api/profile/update/?$           api/profile_update.php [L]

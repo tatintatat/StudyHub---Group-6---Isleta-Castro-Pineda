@@ -80,6 +80,19 @@ if (logoutBtn) logoutBtn.addEventListener('click', async function(e) {
     body: 'You will be logged out of StudyHub. Any unsaved changes may be lost.',
     confirmLabel: 'Sign Out',
     onConfirm: async function() {
+      // Wipe ALL trash-related localStorage keys before leaving.
+      // This ensures the next user who logs in on this browser never sees
+      // a flash of the previous account's trash badge or modal contents.
+      try {
+        var keysToDelete = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && (k.indexOf('studyhub_trash') === 0 || k.indexOf('sh_quizzes_v1_') === 0)) {
+            keysToDelete.push(k);
+          }
+        }
+        keysToDelete.forEach(function(k) { localStorage.removeItem(k); });
+      } catch(_) {}
       await fetch('/api/logout', { method: 'POST' });
       window.location.href = '/';
     }
@@ -190,7 +203,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(o) {
 
 /* ── HEARTBEAT ── */
 function sendHeartbeat() { fetch('/api/heartbeat', {method:'POST'}).catch(function(){}); }
-setInterval(sendHeartbeat, 60000);
+setInterval(sendHeartbeat, 20000);
 sendHeartbeat();
 
 /* ── NOTIFICATION POLLING ── */
@@ -248,41 +261,75 @@ window.SHConfirm = (function() {
 })();
 
 /* ══════════════════════════════════════════
-   TRASH BIN SYSTEM (30-day localStorage)
+   TRASH BIN SYSTEM (server-driven, per-user)
+   Source of truth: /api/subjects?trash=1
+   localStorage used only for icon/type metadata
+   that the server doesn't store.
 ══════════════════════════════════════════ */
 window.SHTrash = (function() {
-  var STORAGE_KEY = 'studyhub_trash';
   var DAYS_30 = 30 * 24 * 60 * 60 * 1000;
 
-  function _load() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(_) { return []; }
+  // ── Per-user metadata key (icon, type only) ──────────────────────────────
+  // IMPORTANT: always scoped to the current user ID so that switching accounts
+  // never leaks one user's trash metadata into another account's trash view.
+  function _metaKey() {
+    var uid = (window.STUDYHUB_USER && window.STUDYHUB_USER.id) ? String(window.STUDYHUB_USER.id) : null;
+    if (!uid) return null; // not logged in — do not read/write any trash data
+    // One-time migration: wipe the legacy unscoped key
+    if (localStorage.getItem('studyhub_trash') !== null) {
+      localStorage.removeItem('studyhub_trash');
+    }
+    return 'studyhub_trash_meta_' + uid;
   }
 
-  function _save(items) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    _updateBadge();
+  function _loadMeta() {
+    var key = _metaKey();
+    if (!key) return {};
+    try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch(_) { return {}; }
   }
 
-  function _updateBadge() {
-    var items = _getActive();
+  function _saveMeta(meta) {
+    var key = _metaKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(meta));
+  }
+
+  // ── Badge ─────────────────────────────────────────────────────────────────
+  function _updateBadge(count) {
     var badge = document.getElementById('trash-count-badge');
     if (!badge) return;
-    if (items.length > 0) {
+    if (count > 0) {
       badge.style.display = 'flex';
-      badge.textContent = items.length > 99 ? '99+' : items.length;
+      badge.textContent = count > 99 ? '99+' : count;
     } else {
       badge.style.display = 'none';
     }
   }
 
-  function _getActive() {
-    var now = Date.now();
-    var items = _load().filter(function(i) { return (now - i.deletedAt) < DAYS_30; });
-    // Purge expired
-    _save._skipBadge = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    _save._skipBadge = false;
-    return items;
+  // ── Fetch trash items from the server (source of truth) ──────────────────
+  function _fetchFromServer() {
+    return fetch('/api/subjects?trash=1')
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        var rows = data.data || data || [];
+        var meta = _loadMeta();
+        // Map server rows → display items, merging saved icon/type metadata
+        return rows.map(function(row) {
+          var m = meta[String(row.id)] || {};
+          return {
+            id:        row.id,
+            name:      row.name,
+            type:      m.type || 'Subject',
+            icon:      m.icon || '<i class="fa-solid fa-book-open" style="color:var(--a-blue)"></i>',
+            deletedAt: row.deleted_at || Date.now(),   // deleted_at is ms timestamp from API
+            // trashId used by restore/permDelete buttons — use server id as stable key
+            trashId:   'srv_' + row.id
+          };
+        });
+      });
   }
 
   function _daysLeft(deletedAt) {
@@ -290,30 +337,53 @@ window.SHTrash = (function() {
     return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
   }
 
+  // ── addItem: called right after a successful soft-delete API call ─────────
+  // Saves icon/type metadata locally (server doesn't store these UI fields)
+  // and refreshes the badge from the server.
   function addItem(item) {
-    // item: { id, name, type, icon, meta }
-    var items = _load();
-    item.deletedAt = Date.now();
-    item.trashId = 'ti_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    items.push(item);
-    _save(items);
-    showToast('"' + item.name + '" moved to trash', 'info');
-    _updateBadge();
+    // Only store metadata (icon, type) — not the item itself, which now lives on the server
+    var meta = _loadMeta();
+    meta[String(item.id)] = { icon: item.icon || '', type: item.type || 'Subject' };
+    _saveMeta(meta);
+    // Refresh badge count from server
+    _fetchFromServer().then(function(items) {
+      _updateBadge(items.length);
+    }).catch(function() {});
   }
 
+  // ── restore ───────────────────────────────────────────────────────────────
   function restore(trashId, onRestore) {
-    var items = _load();
-    var idx = items.findIndex(function(i) { return i.trashId === trashId; });
-    if (idx === -1) return;
-    var item = items.splice(idx, 1)[0];
-    _save(items);
-    if (onRestore) onRestore(item);
-    showToast('"' + item.name + '" restored', 'success');
-    renderModal();
-    _updateBadge();
+    // trashId is 'srv_<subjectId>'
+    var subjectId = trashId.replace(/^srv_/, '');
+    fetch('/api/subjects/' + subjectId + '?action=restore', { method: 'POST' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function() {
+        // Clean up local metadata for this item
+        var meta = _loadMeta();
+        delete meta[String(subjectId)];
+        _saveMeta(meta);
+        if (onRestore) onRestore({ id: subjectId });
+        showToast('Subject restored', 'success');
+        // Re-render modal with fresh server data
+        renderModal();
+        // Refresh subject lists on whichever page is active
+        if (typeof loadSubjects === 'function') loadSubjects();
+        if (typeof loadEduSubjects === 'function') loadEduSubjects();
+        if (typeof populateSubjectSelects === 'function') populateSubjectSelects();
+        if (typeof loadDashboardStats === 'function') loadDashboardStats();
+        if (typeof loadEduStats === 'function') loadEduStats();
+      })
+      .catch(function(err) {
+        showToast('Failed to restore subject: ' + err.message, 'error');
+      });
   }
 
+  // ── permDelete ────────────────────────────────────────────────────────────
   function permDelete(trashId) {
+    var subjectId = trashId.replace(/^srv_/, '');
     SHConfirm.show({
       type: 'danger',
       icon: 'fa-trash',
@@ -321,67 +391,102 @@ window.SHTrash = (function() {
       body: 'This item will be removed forever and cannot be recovered.',
       confirmLabel: 'Delete Forever',
       onConfirm: function() {
-        var items = _load();
-        var idx = items.findIndex(function(i) { return i.trashId === trashId; });
-        if (idx !== -1) items.splice(idx, 1);
-        _save(items);
-        showToast('Item permanently deleted', 'info');
-        renderModal();
-        _updateBadge();
+        fetch('/api/subjects/' + subjectId + '?action=purge', { method: 'DELETE' })
+          .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            var meta = _loadMeta();
+            delete meta[String(subjectId)];
+            _saveMeta(meta);
+            showToast('Subject permanently deleted', 'info');
+            renderModal();
+          })
+          .catch(function(err) {
+            showToast('Failed to permanently delete: ' + err.message, 'error');
+          });
       }
     });
   }
 
+  // ── emptyAll ──────────────────────────────────────────────────────────────
   function emptyAll() {
-    var active = _getActive();
-    if (!active.length) { showToast('Trash is already empty', 'info'); return; }
-    SHConfirm.show({
-      type: 'danger',
-      icon: 'fa-trash',
-      title: 'Empty Trash?',
-      body: 'All ' + active.length + ' item(s) will be permanently deleted. This cannot be undone.',
-      confirmLabel: 'Empty Trash',
-      onConfirm: function() {
-        _save([]);
-        showToast('Trash emptied', 'info');
-        renderModal();
-        _updateBadge();
-      }
+    _fetchFromServer().then(function(items) {
+      if (!items.length) { showToast('Trash is already empty', 'info'); return; }
+      SHConfirm.show({
+        type: 'danger',
+        icon: 'fa-trash',
+        title: 'Empty Trash?',
+        body: 'All ' + items.length + ' item(s) will be permanently deleted. This cannot be undone.',
+        confirmLabel: 'Empty Trash',
+        onConfirm: function() {
+          Promise.all(items.map(function(item) {
+            return fetch('/api/subjects/' + item.id + '?action=purge', { method: 'DELETE' });
+          }))
+          .then(function() {
+            // Clear all metadata for this user
+            var key = _metaKey();
+            if (key) localStorage.removeItem(key);
+            showToast('Trash emptied', 'info');
+            _updateBadge(0);
+            renderModal();
+          })
+          .catch(function(err) {
+            showToast('Failed to empty trash: ' + err.message, 'error');
+          });
+        }
+      });
+    }).catch(function(err) {
+      showToast('Failed to load trash: ' + err.message, 'error');
     });
   }
 
+  // ── renderModal ───────────────────────────────────────────────────────────
+  // Always fetches fresh data from the server — guarantees each user only
+  // sees their own deleted subjects, regardless of shared browser or account switching.
   function renderModal() {
     var container = document.getElementById('trash-list-container');
     var countEl   = document.getElementById('trash-item-count');
     if (!container) return;
-    var items = _getActive().sort(function(a,b){ return b.deletedAt - a.deletedAt; });
-    if (countEl) countEl.textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
-    if (!items.length) {
-      container.innerHTML = '<div class="trash-empty-state"><i class="fa-solid fa-trash-can"></i><p>Trash is empty</p></div>';
-      return;
-    }
-    container.innerHTML = items.map(function(item) {
-      var days = _daysLeft(item.deletedAt);
-      var cls  = days <= 3 ? 'urgent' : days <= 10 ? 'warning' : 'safe';
-      var lbl  = days === 0 ? 'Expires today' : days + 'd left';
-      var deletedDate = new Date(item.deletedAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-      return '<div class="trash-item" data-trash-id="' + item.trashId + '">' +
-        '<div class="trash-item-icon">' + (item.icon || '<i class="fa-solid fa-file" style="color:var(--a-blue)"></i>') + '</div>' +
-        '<div class="trash-item-info">' +
-          '<div class="trash-item-name">' + escapeHtml(item.name) + '</div>' +
-          '<div class="trash-item-meta">' + escapeHtml(item.type || 'File') + ' · Deleted ' + deletedDate + '</div>' +
-        '</div>' +
-        '<span class="trash-item-days ' + cls + '">' + lbl + '</span>' +
-        '<button class="trash-item-restore" title="Restore" onclick="SHTrash.restore(\'' + item.trashId + '\')"><i class="fa-solid fa-rotate-left"></i></button>' +
-        '<button class="trash-item-perm-del" title="Delete permanently" onclick="SHTrash.permDelete(\'' + item.trashId + '\')"><i class="fa-solid fa-xmark"></i></button>' +
-        '</div>';
-    }).join('');
+
+    // Show loading state while fetching
+    container.innerHTML = '<div class="trash-empty-state"><i class="fa-solid fa-rotate fa-spin"></i><p>Loading…</p></div>';
+
+    _fetchFromServer()
+      .then(function(items) {
+        items.sort(function(a, b) { return b.deletedAt - a.deletedAt; });
+        _updateBadge(items.length);
+        if (countEl) countEl.textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
+        if (!items.length) {
+          container.innerHTML = '<div class="trash-empty-state"><i class="fa-solid fa-trash-can"></i><p>Trash is empty</p></div>';
+          return;
+        }
+        container.innerHTML = items.map(function(item) {
+          var days = _daysLeft(item.deletedAt);
+          var cls  = days <= 3 ? 'urgent' : days <= 10 ? 'warning' : 'safe';
+          var lbl  = days === 0 ? 'Expires today' : days + 'd left';
+          var deletedDate = new Date(item.deletedAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+          return '<div class="trash-item" data-trash-id="' + item.trashId + '">' +
+            '<div class="trash-item-icon">' + (item.icon || '<i class="fa-solid fa-file" style="color:var(--a-blue)"></i>') + '</div>' +
+            '<div class="trash-item-info">' +
+              '<div class="trash-item-name">' + escapeHtml(item.name) + '</div>' +
+              '<div class="trash-item-meta">' + escapeHtml(item.type || 'Subject') + ' · Deleted ' + deletedDate + '</div>' +
+            '</div>' +
+            '<span class="trash-item-days ' + cls + '">' + lbl + '</span>' +
+            '<button class="trash-item-restore" title="Restore" onclick="SHTrash.restore(\'' + item.trashId + '\')"><i class="fa-solid fa-rotate-left"></i></button>' +
+            '<button class="trash-item-perm-del" title="Delete permanently" onclick="SHTrash.permDelete(\'' + item.trashId + '\')"><i class="fa-solid fa-xmark"></i></button>' +
+            '</div>';
+        }).join('');
+      })
+      .catch(function(err) {
+        container.innerHTML = '<div class="trash-empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Failed to load trash</p></div>';
+        console.error('SHTrash renderModal error:', err);
+      });
   }
 
+  // ── openModal ─────────────────────────────────────────────────────────────
   function openModal() {
-    renderModal();
     var overlay = document.getElementById('trash-modal-overlay');
     if (overlay) overlay.classList.add('active');
+    renderModal(); // always fetches fresh from server on open
   }
 
   function closeModal() {
@@ -389,17 +494,35 @@ window.SHTrash = (function() {
     if (overlay) overlay.classList.remove('active');
   }
 
-  // Trash modal backdrop close
+  // ── Init ──────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     var o = document.getElementById('trash-modal-overlay');
     if (o) o.addEventListener('click', function(e) {
       if (e.target === o) closeModal();
     });
-    // Trash nav button
     var trashBtn = document.getElementById('trash-nav-btn');
     if (trashBtn) trashBtn.addEventListener('click', openModal);
-    // Init badge
-    _updateBadge();
+
+    // On every page load: remove any stale trash localStorage keys that
+    // don't belong to the currently logged-in user. This is the safety net —
+    // even if logout didn't clean up (e.g. tab was closed, session expired),
+    // another user logging in will never see leftover data.
+    try {
+      var currentKey = _metaKey(); // e.g. 'studyhub_trash_meta_42'
+      var staleKeys = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('studyhub_trash') === 0 && k !== currentKey) {
+          staleKeys.push(k);
+        }
+      }
+      staleKeys.forEach(function(k) { localStorage.removeItem(k); });
+    } catch(_) {}
+
+    // Init badge from server (source of truth — always scoped to current user's session)
+    _fetchFromServer().then(function(items) {
+      _updateBadge(items.length);
+    }).catch(function() { _updateBadge(0); });
   });
 
   return { addItem: addItem, restore: restore, permDelete: permDelete, emptyAll: emptyAll, openModal: openModal, closeModal: closeModal, renderModal: renderModal };

@@ -14,11 +14,22 @@ function _esc(s) {
 }
 function _ago(d) {
   if (!d) return '';
-  var s = Math.floor((Date.now()-new Date(d))/1000);
-  if (s<60) return 'just now';
-  if (s<3600) return Math.floor(s/60)+'m ago';
-  if (s<86400) return Math.floor(s/3600)+'h ago';
-  return Math.floor(s/86400)+'d ago';
+  // handles: ISO string, Unix ms number, or seconds_ago integer
+  var ms = typeof d === 'string' ? new Date(d).getTime() : Number(d);
+  var s  = Math.floor((Date.now() - ms) / 1000);
+  if (s < 5)    return 'just now';
+  if (s < 60)   return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+function _secsAgo(s) {
+  s = parseInt(s) || 0;
+  if (s < 5)     return 'just now';
+  if (s < 60)    return s + 's ago';
+  if (s < 3600)  return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
 }
 function _initials(f,l){ return ((f||'U')[0]+(l||'')[0]).toUpperCase(); }
 function _friendlyDate(d) {
@@ -53,7 +64,7 @@ function renderPosts(posts) {
           '<div class="post-author" onclick="viewUserProfile(\''+_esc(p.username)+'\')" style="cursor:pointer;">'+
             _esc((p.first_name||'')+' '+(p.last_name||''))+'</div>'+
           '<div class="post-handle">@<span onclick="viewUserProfile(\''+_esc(p.username)+'\')" style="cursor:pointer;">'+
-            _esc(p.username)+'</span> \u00b7 <span class="post-time">'+formatTimeAgo(p.created_at)+'</span></div>'+
+            _esc(p.username)+'</span></div>'+
         '</div>'+
         '<div class="post-topic-badge '+getTopicClass(p.topic)+'">'+_esc(p.topic)+'</div>'+
       '</div>'+
@@ -68,6 +79,12 @@ function renderPosts(posts) {
           '<span id="comments-'+p.id+'">'+(p.comment_count||0)+'</span></button>'+
         '<button class="post-action-btn" onclick="sendMessage(\''+_esc(p.username)+'\')" title="Message">'+
           '<i class="fa-regular fa-envelope"></i></button>'+
+        (window.STUDYHUB_USER && String(window.STUDYHUB_USER.id)===String(p.user_id)
+          ? '<button class="post-action-btn post-delete-btn" onclick="deletePost('+p.id+', this)" title="Delete post" style="margin-left:auto;color:var(--a-rose,#f87171);">'+
+            '<i class="fa-regular fa-trash-can"></i></button>' : '')+
+        (window.STUDYHUB_USER && String(window.STUDYHUB_USER.id)!==String(p.user_id)
+          ? '<button class="post-action-btn" onclick="openReportModal(\'post\','+p.id+')" title="Report post" style="color:var(--txt-muted);">'+
+            '<i class="fa-solid fa-flag"></i></button>' : '')+
       '</div>'+
       '<div class="comments-section" id="comments-section-'+p.id+'">'+
         '<div class="comment-input-wrap">'+
@@ -150,8 +167,11 @@ window.toggleComments = async function(id) {
     if (!arr.length){list.innerHTML='<div style="color:var(--txt-dim);font-size:12px;padding:8px 0">No comments yet. Be the first!</div>';return;}
     list.innerHTML=arr.map(function(c){
       var av=c.profile_picture?'<img src="'+_esc(c.profile_picture)+'" class="comment-avatar">':'<div class="comment-initials">'+_initials(c.first_name,c.last_name)+'</div>';
+      var isMyComment = window.STUDYHUB_USER && String(window.STUDYHUB_USER.id)===String(c.user_id);
       return '<div class="comment-item">'+av+'<div class="comment-content"><div class="comment-author">'+_esc((c.first_name||'')+' '+(c.last_name||''))+'</div>'+
-        '<div class="comment-text">'+_esc(c.body)+'</div><div class="comment-time">'+formatTimeAgo(c.created_at)+'</div></div></div>';
+        '<div class="comment-text">'+_esc(c.body)+'</div></div>'+
+        (!isMyComment ? '<button class="comment-report-btn" onclick="openReportModal(\'comment\','+c.id+')" title="Report reply"><i class="fa-solid fa-flag"></i></button>' : '')+
+        '</div>';
     }).join('');
   } catch(_){list.innerHTML='<div style="color:var(--txt-muted);font-size:12px;padding:8px 0">Failed to load</div>';}
 };
@@ -202,9 +222,37 @@ document.querySelectorAll('.category-pill').forEach(function(b){
   });
 });
 
+/* ══ DELETE POST ════════════════════════════════════════ */
+window.deletePost = async function(id, btn) {
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    var res = await fetch('/api/posts/'+id, { method: 'DELETE' });
+    if (res.ok) {
+      var card = document.querySelector('.post-card[data-post-id="'+id+'"]');
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.97)';
+        setTimeout(function() { card.remove(); }, 300);
+      }
+      showToast('Post deleted.', 'success');
+    } else {
+      showToast('Failed to delete post.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
+    }
+  } catch(e) {
+    showToast('Failed to delete post.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
+  }
+};
+
 /* ══ INIT ═══════════════════════════════════════════════ */
 loadPosts(); loadLeaderboard(); loadOnlineUsers();
-setInterval(loadOnlineUsers, 60000);
+setInterval(loadOnlineUsers, 20000);
 
 /* ══════════════════════════════════════════════════════════
    USER PROFILE POPUP MODAL
@@ -295,7 +343,6 @@ async function _loadUpmPosts(username) {
         '<div class="upm-post-meta">'+
           '<span><i class="fa-regular fa-heart"></i> '+(p.like_count||0)+'</span>'+
           '<span><i class="fa-regular fa-comment"></i> '+(p.comment_count||0)+'</span>'+
-          '<span><i class="fa-regular fa-clock"></i> '+_ago(p.created_at)+'</span>'+
         '</div></div>';
     }).join('');
   } catch(_){
@@ -445,10 +492,12 @@ async function _loadDmUser(username){
     _dm.name=((u.first_name||'')+' '+(u.last_name||'')).trim()||username;
     _dm.initials=_initials(u.first_name,u.last_name);
     _dm.avatar=u.profile_picture||'';
-    var online=false, st='Offline';
-    if (u.last_active){
-      var m=Math.floor((Date.now()-new Date(u.last_active))/60000);
-      online=m<5; st=online?'Active now':'Active '+_ago(u.last_active);
+    var online = !!u.is_online;
+    var st = 'Offline';
+    if (online) {
+      st = 'Active now';
+    } else if (u.secs_since_active) {
+      st = 'Active ' + _secsAgo(u.secs_since_active);
     }
     _fbSetHeader(_dm.name,_dm.initials,_dm.avatar,online);
     var sel=document.getElementById('fb-chat-header-status');
@@ -497,7 +546,7 @@ function _appendBubbles(msgs, container){
         :'<div class="dm-bubble-row-ava invisible"></div>';
     }
     row.innerHTML=ava+'<div class="dm-bubble '+(sent?'sent':'received')+'">'+_esc(msg.body||msg.content||'')+'</div>'+
-      '<div class="dm-bubble-time">'+_ago(msg.created_at)+'</div>';
+      '';
     container.appendChild(row);
   });
 }
@@ -531,3 +580,84 @@ document.addEventListener('keydown',function(e){
   if (e.key!=='Escape') return;
   _closeUpm(); _fbClose();
 });
+
+/* ══ REPORT MODAL ═══════════════════════════════════════ */
+(function() {
+  // Inject report modal HTML once DOM ready
+  var REASONS = [
+    { val: 'spam',           label: '🚫 Spam' },
+    { val: 'harassment',     label: '😠 Harassment' },
+    { val: 'inappropriate',  label: '⚠️ Inappropriate content' },
+    { val: 'misinformation', label: '❌ Misinformation' },
+    { val: 'other',          label: '📋 Other' }
+  ];
+
+  function injectModal() {
+    if (document.getElementById('rpt-overlay')) return;
+    var html = '<div class="rpt-overlay" id="rpt-overlay">' +
+      '<div class="rpt-modal">' +
+        '<div class="rpt-header">' +
+          '<div class="rpt-title"><i class="fa-solid fa-flag" style="margin-right:8px;color:var(--a-rose,#f87171);"></i>Report Content</div>' +
+          '<button class="rpt-close" id="rpt-close"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>' +
+        '<div class="rpt-body">' +
+          '<p class="rpt-sub">Help keep StudyHub safe. Select a reason:</p>' +
+          '<div class="rpt-reasons" id="rpt-reasons">' +
+            REASONS.map(function(r) {
+              return '<label class="rpt-reason-opt">' +
+                '<input type="radio" name="rpt-reason" value="' + r.val + '">' +
+                '<span>' + r.label + '</span></label>';
+            }).join('') +
+          '</div>' +
+          '<textarea class="rpt-details" id="rpt-details" placeholder="Optional: add more context…" rows="3"></textarea>' +
+        '</div>' +
+        '<div class="rpt-footer">' +
+          '<button class="rpt-cancel" id="rpt-cancel-btn">Cancel</button>' +
+          '<button class="rpt-submit" id="rpt-submit-btn"><i class="fa-solid fa-paper-plane"></i> Submit Report</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('rpt-close').addEventListener('click', closeReportModal);
+    document.getElementById('rpt-cancel-btn').addEventListener('click', closeReportModal);
+    document.getElementById('rpt-overlay').addEventListener('click', function(e) { if (e.target===this) closeReportModal(); });
+    document.getElementById('rpt-submit-btn').addEventListener('click', submitReport);
+  }
+
+  var _rpt = { type: null, id: null };
+
+  window.openReportModal = function(type, id) {
+    injectModal();
+    _rpt.type = type; _rpt.id = id;
+    // Reset
+    document.querySelectorAll('input[name="rpt-reason"]').forEach(function(r){ r.checked=false; });
+    document.getElementById('rpt-details').value = '';
+    document.getElementById('rpt-overlay').classList.add('active');
+  };
+
+  function closeReportModal() {
+    var ov = document.getElementById('rpt-overlay');
+    if (ov) ov.classList.remove('active');
+  }
+  window.closeReportModal = closeReportModal;
+
+  async function submitReport() {
+    var reason = '';
+    document.querySelectorAll('input[name="rpt-reason"]').forEach(function(r){ if(r.checked) reason=r.value; });
+    if (!reason) { showToast('Please select a reason.', 'error'); return; }
+    var details = document.getElementById('rpt-details').value.trim();
+    var btn = document.getElementById('rpt-submit-btn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      var res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content_type: _rpt.type, content_id: _rpt.id, reason: reason, details: details })
+      });
+      var d = await res.json();
+      if (!res.ok) { showToast(d.error || 'Error submitting report.', 'error'); }
+      else { showToast(d.message || 'Report submitted!', 'success'); closeReportModal(); }
+    } catch(_) { showToast('Failed to submit report.', 'error'); }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Report';
+  }
+})();

@@ -32,6 +32,7 @@
 
   /* Accent — unified to auth.css blue */
   --a-blue:     #3b9eff;
+  --a-violet:   #8b7cf8;
   --a-indigo:   #2563eb;
   --a-rose:     #f87171;
   --a-amber:    #fbbf24;
@@ -2939,6 +2940,10 @@ body::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  position: absolute;
+  inset: 0;
 }
  
 .fbp-ava-overlay {
@@ -3761,6 +3766,14 @@ body::after {
   width: 7px; height: 7px;
   border-radius: 50%; background: #45bd62;
   display: inline-block;
+}
+.msg-status-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #6b7a99;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background 0.3s ease;
 }
  
 .msg-chat-header-actions { display: flex; gap: 4px; }
@@ -4698,3 +4711,25 @@ body::after {
 .msg-chat-header-ava { position: relative; overflow: hidden; }
  
 
+
+/* ── Message file/image bubbles ── */
+.msg-bubble-img {
+  max-width: 220px;
+  max-height: 200px;
+  border-radius: 10px;
+  display: block;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.msg-bubble-img:hover { opacity: 0.85; }
+
+.msg-bubble-file {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  font-size: 13px;
+  gap: 4px;
+  padding: 2px 0;
+}
+.msg-bubble-file:hover { text-decoration: underline; }

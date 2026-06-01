@@ -1,0 +1,302 @@
+<?php
+require_once __DIR__ . '/includes/helpers.php';
+require_auth_page();
+$user = sh_current_user();
+if (!$user) { session_destroy(); header('Location: /index.php'); exit; }
+$active_page = 'community';
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyHub — Community</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="/static/css/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+
+<?php include __DIR__ . '/includes/_nav.php'; ?>
+<?php include __DIR__ . '/includes/_modals.php'; ?>
+
+<div class="main-wrap">
+  <div class="page-body active" id="view-feed">
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Community <em>Feed</em></h1>
+        <div class="page-header-sub">Connect, share, and learn with fellow students</div>
+      </div>
+    </div>
+
+    <div class="feed-layout">
+      <div class="feed-main">
+
+        <div class="post-creator">
+          <input type="text" class="post-creator-title-input" id="post-title" placeholder="Post title (e.g. Help with Algebra)">
+          <textarea class="post-creator-body" id="post-body" placeholder="Share a question, note, or idea…"></textarea>
+          <div class="post-creator-actions">
+            <select class="post-topic-select" id="post-topic">
+              <option value="General">General</option>
+              <option value="Math">Math</option>
+              <option value="Science">Science</option>
+              <option value="Notes">Notes</option>
+              <option value="Help Needed">Help Needed</option>
+            </select>
+            <button class="post-btn" id="post-submit">Post</button>
+          </div>
+          <div class="feed-categories" id="feed-categories">
+            <button class="category-pill active" data-topic="all">All</button>
+            <button class="category-pill" data-topic="General">General</button>
+            <button class="category-pill" data-topic="Math">Math</button>
+            <button class="category-pill" data-topic="Science">Science</button>
+            <button class="category-pill" data-topic="Help Needed">Help?</button>
+            <button class="category-pill" data-topic="Notes">Notes</button>
+          </div>
+        </div>
+
+        <div class="feed-tabs" id="feed-tabs">
+          <button class="feed-tab active" data-filter="all">All Posts</button>
+          <button class="feed-tab" data-filter="following">Following</button>
+          <button class="feed-tab" data-filter="trending">Trending</button>
+        </div>
+
+        <div id="posts-container">
+          <div class="empty-state" style="padding:3rem 0">
+            <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
+            <div>Loading posts…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-sidebar">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <i class="fa-solid fa-trophy"></i>
+            <div class="leaderboard-title">Top Students</div>
+          </div>
+          <div id="leaderboard-list">
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:36px;margin:8px 16px;border-radius:8px;"></div>
+          </div>
+        </div>
+        <div class="online-card">
+          <div class="online-header">
+            <i class="fa-solid fa-circle" style="font-size:8px;color:var(--a-emerald);"></i>
+            <div class="online-title">Online Now</div>
+          </div>
+          <div id="online-list">
+            <div class="skeleton" style="height:30px;margin:6px 16px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:30px;margin:6px 16px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── USER PROFILE MODAL ────────────────────────────── -->
+<div class="upm-overlay" id="upm-overlay">
+  <div class="upm-modal" id="upm-modal">
+
+    <!-- Cover banner -->
+    <div class="upm-cover" id="upm-cover">
+      <button class="upm-cover-close" id="upm-close-btn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Identity row -->
+    <div class="upm-identity-row">
+      <div class="upm-ava-wrap">
+        <div class="upm-ava" id="upm-ava">U</div>
+      </div>
+      <div class="upm-id-info">
+        <div class="upm-name" id="upm-name">Loading…</div>
+        <div class="upm-handle" id="upm-handle">@username</div>
+      </div>
+    </div>
+
+    <!-- Counters -->
+    <div class="upm-counters">
+      <div class="upm-counter">
+        <div class="upm-counter-val" id="upm-posts-count">0</div>
+        <div class="upm-counter-lbl">Posts</div>
+      </div>
+      <div class="upm-counter">
+        <div class="upm-counter-val" id="upm-followers-count">0</div>
+        <div class="upm-counter-lbl">Followers</div>
+      </div>
+      <div class="upm-counter">
+        <div class="upm-counter-val" id="upm-following-count">0</div>
+        <div class="upm-counter-lbl">Following</div>
+      </div>
+      <div class="upm-counter">
+        <div class="upm-counter-val" id="upm-likes-count">0</div>
+        <div class="upm-counter-lbl">Likes</div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="upm-action-row">
+      <button class="upm-follow-btn" id="upm-follow-btn">
+        <i class="fa-solid fa-user-plus"></i>
+        <span id="upm-follow-text">Follow</span>
+      </button>
+      <button class="upm-msg-btn" id="upm-dm-btn">
+        <i class="fa-regular fa-envelope"></i> Message
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="upm-tabs">
+      <button class="upm-tab active" data-upm-tab="posts">
+        <i class="fa-regular fa-newspaper"></i> Posts
+        <span class="upm-tab-count" id="upm-tab-post-count">0</span>
+      </button>
+      <button class="upm-tab" data-upm-tab="about">
+        <i class="fa-solid fa-circle-info"></i> About
+      </button>
+      <button class="upm-tab" data-upm-tab="badges">
+        <i class="fa-solid fa-medal"></i> Badges
+      </button>
+    </div>
+
+    <!-- Posts panel -->
+    <div class="upm-tab-panel active" id="upm-panel-posts">
+      <div id="upm-posts-list">
+        <div class="empty-state" style="padding:2rem 0">
+          <i class="fa-solid fa-spinner fa-spin empty-icon-fa"></i>
+          <div>Loading posts…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About panel -->
+    <div class="upm-tab-panel" id="upm-panel-about">
+      <div class="upm-about-row">
+        <div class="upm-about-icon"><i class="fa-solid fa-at"></i></div>
+        <div>
+          <div style="font-size:10.5px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Username</div>
+          <div class="upm-about-val" id="upm-about-username">—</div>
+        </div>
+      </div>
+      <div class="upm-about-row">
+        <div class="upm-about-icon"><i class="fa-regular fa-calendar"></i></div>
+        <div>
+          <div style="font-size:10.5px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Joined</div>
+          <div class="upm-about-val" id="upm-about-joined">—</div>
+        </div>
+      </div>
+      <div class="upm-about-row">
+        <div class="upm-about-icon"><i class="fa-solid fa-fire"></i></div>
+        <div>
+          <div style="font-size:10.5px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Study Streak</div>
+          <div class="upm-about-val" id="upm-about-streak">0 days</div>
+        </div>
+      </div>
+      <div class="upm-about-row">
+        <div class="upm-about-icon"><i class="fa-solid fa-book"></i></div>
+        <div>
+          <div style="font-size:10.5px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Top Subject</div>
+          <div class="upm-about-val" id="upm-about-subject">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges panel -->
+    <div class="upm-tab-panel" id="upm-panel-badges">
+      <div class="upm-badges-grid" id="upm-badges-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </div><!-- /upm-modal -->
+</div><!-- /upm-overlay -->
+
+
+<!-- ── FB-STYLE FLOATING CHAT BUBBLE ─────────────────── -->
+
+<!-- Minimised tab (shown when chat is collapsed) -->
+<div class="fb-chat-tab" id="fb-chat-tab" style="display:none;">
+  <div class="fb-chat-tab-ava" id="fb-chat-tab-ava">U</div>
+  <div class="fb-chat-tab-info">
+    <div class="fb-chat-tab-name" id="fb-chat-tab-name">Chat</div>
+    <div class="fb-chat-tab-status" id="fb-chat-tab-status">Active now</div>
+  </div>
+  <button class="fb-chat-tab-close" id="fb-chat-tab-close" title="Close">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- Expanded chat window -->
+<div class="fb-chat-win" id="fb-chat-win" style="display:none;">
+  <!-- Header bar -->
+  <div class="fb-chat-header" id="fb-chat-header">
+    <div class="fb-chat-header-ava" id="fb-chat-header-ava">
+      <span id="fb-chat-ava-initials">U</span>
+      <div class="fb-chat-online-dot" id="fb-chat-online-dot" style="display:none;"></div>
+    </div>
+    <div class="fb-chat-header-info">
+      <div class="fb-chat-header-name" id="fb-chat-header-name">…</div>
+      <div class="fb-chat-header-status" id="fb-chat-header-status">Loading…</div>
+    </div>
+    <div class="fb-chat-header-btns">
+      <button class="fb-chat-hdr-btn" id="fb-chat-profile-btn" title="View profile">
+        <i class="fa-regular fa-user"></i>
+      </button>
+      <button class="fb-chat-hdr-btn" id="fb-chat-minimise-btn" title="Minimise">
+        <i class="fa-solid fa-minus"></i>
+      </button>
+      <button class="fb-chat-hdr-btn fb-chat-hdr-close" id="fb-chat-close-btn" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Message bubbles -->
+  <div class="fb-chat-bubbles" id="dm-bubbles">
+    <div class="dm-loading">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>Opening conversation…</span>
+    </div>
+  </div>
+
+  <!-- Input row -->
+  <div class="fb-chat-input-row">
+    <input class="fb-chat-input" id="dm-input" placeholder="Aa" autocomplete="off">
+    <button class="fb-chat-send-btn" id="dm-send-btn">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Keep old IDs for JS compatibility (hidden aliases) -->
+<div id="dm-panel" style="display:none;" aria-hidden="true"></div>
+<div id="dm-backdrop" style="display:none;" aria-hidden="true"></div>
+<div id="dm-panel-ava" style="display:none;" aria-hidden="true">
+  <span id="dm-panel-ava-initials"></span>
+  <div id="dm-panel-online-dot"></div>
+</div>
+<div id="dm-panel-name" style="display:none;" aria-hidden="true"></div>
+<div id="dm-panel-status-text" style="display:none;" aria-hidden="true"></div>
+<button id="dm-close-btn" style="display:none;" aria-hidden="true"></button>
+<button id="dm-view-profile-btn" style="display:none;" aria-hidden="true"></button>
+
+<script>
+  window.STUDYHUB_USER = {
+    id: "<?php echo htmlspecialchars($user["id"] ?? ""); ?>", name: "<?php echo htmlspecialchars($user["first_name"] ?? ""); ?> <?php echo htmlspecialchars($user["last_name"] ?? ""); ?>",
+    firstName: "<?php echo htmlspecialchars($user["first_name"] ?? ""); ?>", username: "<?php echo htmlspecialchars($user["username"] ?? ""); ?>",
+    email: "<?php echo htmlspecialchars($user["email"] ?? ""); ?>", avatar: "<?php echo htmlspecialchars($user["profile_picture"] ?? ""); ?>",
+    initials: "<?php echo htmlspecialchars(strtoupper(($user["first_name"][0] ?? "U") . ($user["last_name"][0] ?? ""))); ?>"
+  };
+</script>
+<script src="/static/js/nav.js?v=1779582994"></script>
+<script src="/static/js/shared.js?v=1779582994"></script>
+<script src="/static/js/community.js?v=1779582994"></script>
+</body>
+</html>
